@@ -1,0 +1,103 @@
+# Implementation Plan: Enforcing Strict Framework Isolation
+
+This plan updates the architecture to enforce **Strict Framework Isolation** across all supported frameworks: **Django**, **React**, **Vue.js**, **Flutter Desktop**, **Flutter Mobile**, and **WordPress**.
+
+Under Framework Isolation, each framework possesses its own completely self-contained, independent agent structure, automation scripts, pre-commit/post-commit Git hooks, installation scripts, configurations, and documentation inside its dedicated framework folder. Duplication between framework folders is explicitly allowed and preferred over shared cross-framework files.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> - **Framework Isolation**: Each framework directory (`django/`, `react/`, `vuejs/`, `flutter/desktop/`, `flutter/mobile/`, `wordpress/`) will contain its own self-contained `automation/` directory with independent `setup-project`, `install-hooks`, `pre-commit`, and `post-commit` scripts for both Linux bash (`.sh`) and Windows PowerShell (`.ps1`).
+> - **No Centralized Framework Logic**: Root scripts will act strictly as generic entry points / delegators to framework-specific scripts. No framework-specific `if/else` lumping will exist in root hook scripts.
+> - **Preserve Context & Features**: All existing agent roles (`*.agent.md`), skills (`SKILL.md`), foundation files (`exampleApi.ts`, `ExampleWidget.tsx`, etc.), and documentation remain completely preserved and updated to reference their own framework's isolated scripts.
+
+---
+
+## Proposed Changes
+
+### 1. Framework-Isolated Automation & Hooks
+
+#### [NEW] [django/automation/git/pre-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/automation/git/pre-commit.sh)
+#### [NEW] [django/automation/git/pre-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/automation/git/pre-commit.ps1)
+- Isolated Django pre-commit hooks (`python3 manage.py check`, `pytest` / `python manage.py test`).
+
+#### [NEW] [react/automation/linux/install-hooks.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/linux/install-hooks.sh)
+#### [NEW] [react/automation/windows/install-hooks.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/windows/install-hooks.ps1)
+#### [NEW] [react/automation/git/pre-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/git/pre-commit.sh)
+#### [NEW] [react/automation/git/pre-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/git/pre-commit.ps1)
+#### [NEW] [react/automation/git/post-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/git/post-commit.sh)
+#### [NEW] [react/automation/git/post-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/git/post-commit.ps1)
+- Isolated React pre-commit (`npx tsc --noEmit`) and post-commit (`graphify`) hooks.
+
+#### [NEW] [vuejs/automation/linux/install-hooks.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/automation/linux/install-hooks.sh)
+#### [NEW] [vuejs/automation/windows/install-hooks.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/automation/windows/install-hooks.ps1)
+#### [NEW] [vuejs/automation/git/pre-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/automation/git/pre-commit.sh)
+#### [NEW] [vuejs/automation/git/pre-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/automation/git/pre-commit.ps1)
+#### [NEW] [vuejs/automation/git/post-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/automation/git/post-commit.sh)
+#### [NEW] [vuejs/automation/git/post-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/automation/git/post-commit.ps1)
+#### [NEW] [vuejs/automation/setup-project.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/automation/setup-project.sh)
+#### [NEW] [vuejs/automation/setup-project.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/automation/setup-project.ps1)
+- Isolated Vue.js pre-commit (`vue-tsc --noEmit`), post-commit (`graphify`), and setup scripts.
+
+#### [NEW] [flutter/desktop/automation/linux/install-hooks.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/desktop/automation/linux/install-hooks.sh)
+#### [NEW] [flutter/desktop/automation/windows/install-hooks.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/desktop/automation/windows/install-hooks.ps1)
+#### [NEW] [flutter/desktop/automation/git/pre-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/desktop/automation/git/pre-commit.sh)
+#### [NEW] [flutter/desktop/automation/git/pre-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/desktop/automation/git/pre-commit.ps1)
+#### [NEW] [flutter/desktop/automation/git/post-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/desktop/automation/git/post-commit.sh)
+#### [NEW] [flutter/desktop/automation/git/post-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/desktop/automation/git/post-commit.ps1)
+- Isolated Flutter Desktop pre-commit (`flutter analyze`), post-commit (`graphify`), and install scripts.
+
+#### [NEW] [flutter/mobile/automation/linux/install-hooks.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/mobile/automation/linux/install-hooks.sh)
+#### [NEW] [flutter/mobile/automation/windows/install-hooks.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/mobile/automation/windows/install-hooks.ps1)
+#### [NEW] [flutter/mobile/automation/git/pre-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/mobile/automation/git/pre-commit.sh)
+#### [NEW] [flutter/mobile/automation/git/pre-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/mobile/automation/git/pre-commit.ps1)
+#### [NEW] [flutter/mobile/automation/git/post-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/mobile/automation/git/post-commit.sh)
+#### [NEW] [flutter/mobile/automation/git/post-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/mobile/automation/git/post-commit.ps1)
+- Isolated Flutter Mobile pre-commit (`flutter analyze`), post-commit (`graphify`), and install scripts.
+
+#### [NEW] [wordpress/automation/linux/install-hooks.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/automation/linux/install-hooks.sh)
+#### [NEW] [wordpress/automation/windows/install-hooks.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/automation/windows/install-hooks.ps1)
+#### [NEW] [wordpress/automation/git/pre-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/automation/git/pre-commit.sh)
+#### [NEW] [wordpress/automation/git/pre-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/automation/git/pre-commit.ps1)
+#### [NEW] [wordpress/automation/git/post-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/automation/git/post-commit.sh)
+#### [NEW] [wordpress/automation/git/post-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/automation/git/post-commit.ps1)
+- Isolated WordPress pre-commit (`php -l`), post-commit (`graphify`), and install scripts.
+
+---
+
+### 2. Root Automation Scripts Update
+
+#### [MODIFY] [automation/linux/setup-project.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/automation/linux/setup-project.sh)
+#### [MODIFY] [automation/windows/setup-project.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/automation/windows/setup-project.ps1)
+#### [MODIFY] [automation/linux/install-hooks.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/automation/linux/install-hooks.sh)
+#### [MODIFY] [automation/windows/install-hooks.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/automation/windows/install-hooks.ps1)
+#### [MODIFY] [automation/git/pre-commit.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/automation/git/pre-commit.sh)
+#### [MODIFY] [automation/git/pre-commit.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/automation/git/pre-commit.ps1)
+- Make root scripts act as generic entry-point dispatchers to the target framework's own isolated automation folder.
+
+---
+
+### 3. Framework Documentation & Skill Prompts Update
+
+#### [MODIFY] [django/skills/django-git-hooks/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/skills/django-git-hooks/SKILL.md)
+#### [MODIFY] [react/skills/react-git-hooks/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/skills/react-git-hooks/SKILL.md)
+#### [MODIFY] [vuejs/skills/vue-git-hooks/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/skills/vue-git-hooks/SKILL.md)
+#### [MODIFY] [wordpress/skills/wp-git-hooks/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/skills/wp-git-hooks/SKILL.md)
+- Update skill documentation to reflect isolated, framework-specific hook paths and execution commands.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+1. **Framework Hook Isolation Test**: Run pre-commit and post-commit hook scripts individually from inside each framework folder:
+   - `django/automation/git/pre-commit.sh`
+   - `react/automation/git/pre-commit.sh`
+   - `vuejs/automation/git/pre-commit.sh`
+   - `flutter/desktop/automation/git/pre-commit.sh`
+   - `flutter/mobile/automation/git/pre-commit.sh`
+   - `wordpress/automation/git/pre-commit.sh`
+2. **Framework Project Setup Test**: Execute `setup-project.sh` for each framework target to verify that all assets (agents, skills, foundation code, isolated automation scripts) are copied cleanly into target directories.
+3. **Git Diff Audit**: Run `git status` and `git diff` to verify that each framework is 100% self-contained and no context was deleted.

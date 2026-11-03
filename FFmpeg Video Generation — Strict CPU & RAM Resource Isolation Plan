@@ -1,0 +1,83 @@
+# FFmpeg Video Generation — Strict CPU & RAM Resource Isolation Plan
+
+Modify the timelapse video generation engine and background job infrastructure to guarantee server stability, controlled RAM usage, strict CPU caps below 50%, and job concurrency protection.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Key Infrastructure & Behavior Decisions:**
+> 1. **Dedicated Celery Worker (`video` Queue)**: Video generation tasks will be routed to a dedicated Celery worker service (`rawadh_celery_video`) running with `--concurrency=1`. This isolates video processing from API tasks and general background workers.
+> 2. **Job Locking**: Simultaneous video generation requests for the same camera/timelapse will be guarded by a Redis lock. If a job is already in progress, duplicate jobs will log a warning and exit gracefully without overloading the server.
+> 3. **CPU Priority (`nice`) & Docker CPU Cap**: FFmpeg processes will run with OS priority `nice -n 10` (or configured value) and container CPU limits (`cpus: "0.50"`), ensuring normal server processes always take priority.
+> 4. **Longer Execution Times**: Video creation will intentionally take longer to complete to preserve CPU and RAM stability.
+
+---
+
+## Proposed Changes
+
+### Core Settings & Task Routing
+
+#### [MODIFY] [settings.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai/settings.py)
+- Expand `TIMELAPSE_VIDEO_GENERATE` with centralized, environment-configurable parameters:
+  - `VIDEO_MAX_FFMPEG_THREADS`: default `1`
+  - `VIDEO_S3_DOWNLOAD_WORKERS`: default `2`
+  - `VIDEO_FFMPEG_PRESET`: default `"superfast"`
+  - `VIDEO_FFMPEG_NICE_LEVEL`: default `10`
+  - `VIDEO_MAX_CONCURRENT_JOBS`: default `1`
+- Add Celery task routing in `CELERY_TASK_ROUTES` for `rawadhai_module.timelapse_videos_with_progress.video_process_project_files` -> queue `'video'`.
+
+---
+
+### Video Processing & Lock Control
+
+#### [MODIFY] [timelapse_videos_with_progress.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/timelapse_videos_with_progress.py)
+- **CPU & Process Priority**: In `create_video_from_images`, pass `cmd=['nice', '-n', str(nice_level), 'ffmpeg']` to run FFmpeg under low OS scheduling priority.
+- **Centralized Settings**: Read thread caps, presets, and nice levels dynamically from `settings.TIMELAPSE_VIDEO_GENERATE`.
+- **Concat Demuxer**: Enforce disk-based image sequence reading so Python RAM does not grow with image count.
+- **Controlled S3 Download**: Use `VIDEO_S3_DOWNLOAD_WORKERS` (default 2) for downloading images.
+- **Task Locking & Logging**: In `video_process_project_files` (or `process_video`), acquire a Redis cache lock before processing. If a lock exists:
+  - Log: `"Video generation job skipped because another video job is already running for camera X."`
+  - Exit safely without re-queuing duplicate work.
+- **Comprehensive Monitoring**: Log start time, end time, elapsed duration, total image count, output video size (MB), FFmpeg thread count, preset, nice level, and lock status.
+
+#### [MODIFY] [tasks.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/tasks.py)
+- Verify `process_camera_timelapse` dispatches tasks to `video_process_project_files` cleanly without holding unmanaged temporary locks.
+
+---
+
+### Docker & Infrastructure Configuration
+
+#### [MODIFY] [docker-compose-dev.yml](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/docker-compose-dev.yml)
+#### [MODIFY] [docker-compose-celery-staging.yml](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/docker-compose-celery-staging.yml)
+#### [MODIFY] [docker-compose-celery-prod.yml](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/docker-compose-celery-prod.yml)
+- Configure/add dedicated `rawadh_celery_video` worker container service:
+  - Command: `celery -A rawadhai worker -l info -Q video --concurrency=1`
+  - Add CPU resource limits (`cpus: "0.50"`) where supported by Docker Compose deploy configs.
+
+---
+
+### Documentation & Practice Materials
+
+#### [MODIFY] [video_processing_optimization.md](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/docs/video_processing_optimization.md)
+- Update markdown documentation to detail CPU capping, `nice` process priority, Redis single-job locks, S3 download throttling, dedicated Celery queues, and monitoring logs.
+
+#### [MODIFY] [video_processing_optimization.ipynb](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/practice/rawadhai_module/video_processing_optimization.ipynb)
+- Build a comprehensive Jupyter practice notebook with standard Django setup, problem statement, solution overview, test scenarios, API examples, verification steps, and edge cases.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Run Django test suite inside Docker container:
+  ```bash
+  docker compose exec rawadh_backend python manage.py test rawadhai_module
+  ```
+
+### Manual Verification & Diagnostics
+- Verify system checks inside Docker:
+  ```bash
+  docker compose exec rawadh_backend python manage.py check
+  ```
+- Test video configuration and lock handling in python shell inside Docker container.
+- Inspect resource usage during video generation using `docker stats`.

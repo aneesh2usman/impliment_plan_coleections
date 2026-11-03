@@ -1,0 +1,138 @@
+# Implementation Plan - Complete Flutter Mobile & Desktop Framework Isolation
+
+Organize the `flutter/` directory into **`flutter/mobile/`** and **`flutter/desktop/`** without losing or omitting any existing Flutter agents, skills, or architecture plans. Both `flutter/mobile/` and `flutter/desktop/` will be completely self-contained and independently shippable.
+
+---
+
+## Complete Inventory Matrix
+
+### 1. Agents (`agents/`)
+Both targets will receive the full agent team tailored for their target platform:
+- `implementer.agent.md`: Writes production code for Flutter mobile or desktop.
+- `orchestrator.agent.md`: Sequences multi-agent workflow.
+- `planner.agent.md`: Analyzes requirements and produces 6-step implementation plans.
+- `reviewer.agent.md`: Audits code quality, state management, and performance.
+- `tester.agent.md`: Runs `flutter test` and `flutter analyze`.
+- `release-specialist.agent.md` (Desktop only): Manages Windows packaging (`build_release.ps1`), MSVC DLL bundling, and NSIS setup installer.
+
+### 2. Architecture Plans (`architecture_plans/`)
+- **`flutter/desktop/architecture_plans/`**:
+  - `flutter-hardware-integration.md` (Desktop serial port communication)
+  - `flutter-local-database.md` (Drift SQLite database)
+  - `flutter-state-management.md` (Provider reactive state)
+- **`flutter/mobile/architecture_plans/`**:
+  - `flutter-local-database.md` (Drift SQLite database)
+  - `flutter-state-management.md` (Provider reactive state)
+
+### 3. Skills Catalog (`skills/`)
+- **`flutter/desktop/skills/`**:
+  - `flutter-code-standards/SKILL.md`
+  - `flutter-cross-agent-coordination/SKILL.md`
+  - `flutter-drift-database/SKILL.md` (WAL mode PRAGMA tuning & SQLCipher encryption)
+  - `flutter-implementation-planning/SKILL.md`
+  - `flutter-project-onboarding/SKILL.md`
+  - `flutter-provider-state/SKILL.md`
+  - `flutter-serial-hardware/SKILL.md` (Serial port hardware integration)
+  - `flutter-testing/SKILL.md`
+  - `flutter-windows-release/SKILL.md` (NSIS & DLL bundling)
+  - `flutter-graphify/SKILL.md`
+  - `flutter-docker/SKILL.md`
+  - `flutter-git-hooks/SKILL.md`
+- **`flutter/mobile/skills/`**:
+  - `flutter-code-standards/SKILL.md`
+  - `flutter-cross-agent-coordination/SKILL.md`
+  - `flutter-drift-database/SKILL.md`
+  - `flutter-implementation-planning/SKILL.md`
+  - `flutter-project-onboarding/SKILL.md`
+  - `flutter-provider-state/SKILL.md`
+  - `flutter-testing/SKILL.md`
+  - `flutter-graphify/SKILL.md`
+  - `flutter-docker/SKILL.md`
+  - `flutter-git-hooks/SKILL.md`
+
+---
+
+## Directory Structure
+
+```text
+flutter/
+├── mobile/
+│   ├── AGENTS.md
+│   ├── AGENT_USAGE.md
+│   ├── agents/
+│   │   ├── implementer.agent.md
+│   │   ├── orchestrator.agent.md
+│   │   ├── planner.agent.md
+│   │   ├── reviewer.agent.md
+│   │   └── tester.agent.md
+│   ├── skills/
+│   │   ├── flutter-code-standards/
+│   │   ├── flutter-cross-agent-coordination/
+│   │   ├── flutter-drift-database/
+│   │   ├── flutter-implementation-planning/
+│   │   ├── flutter-project-onboarding/
+│   │   ├── flutter-provider-state/
+│   │   ├── flutter-testing/
+│   │   ├── flutter-graphify/
+│   │   ├── flutter-docker/
+│   │   └── flutter-git-hooks/
+│   ├── architecture_plans/
+│   │   ├── flutter-local-database.md
+│   │   └── flutter-state-management.md
+│   ├── foundation/
+│   ├── automation/
+│   ├── docker/
+│   ├── templates/graphify/
+│   └── git-ignore/
+│
+└── desktop/
+    ├── AGENTS.md
+    ├── AGENT_USAGE.md
+    ├── agents/
+    │   ├── implementer.agent.md
+    │   ├── orchestrator.agent.md
+    │   ├── planner.agent.md
+    │   ├── reviewer.agent.md
+    │   ├── tester.agent.md
+    │   └── release-specialist.agent.md
+    ├── skills/
+    │   ├── flutter-code-standards/
+    │   ├── flutter-cross-agent-coordination/
+    │   ├── flutter-drift-database/
+    │   ├── flutter-implementation-planning/
+    │   ├── flutter-project-onboarding/
+    │   ├── flutter-provider-state/
+    │   ├── flutter-serial-hardware/
+    │   ├── flutter-testing/
+    │   ├── flutter-windows-release/
+    │   ├── flutter-graphify/
+    │   ├── flutter-docker/
+    │   └── flutter-git-hooks/
+    ├── architecture_plans/
+    │   ├── flutter-hardware-integration.md
+    │   ├── flutter-local-database.md
+    │   └── flutter-state-management.md
+    ├── foundation/                              # Drift SQLite DB (app_database.dart), DAOs, serial hardware service
+    ├── automation/                              # Windows build_release.ps1, setup.nsi, linux/windows scripts
+    ├── docker/
+    ├── templates/graphify/
+    └── git-ignore/
+```
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> All 5 agents, all 8 skills, and all 3 architecture plans are fully preserved and placed into `flutter/mobile/` and `flutter/desktop/`. Zero files lost.
+
+---
+
+## Verification Plan
+
+### Automated Verification
+- Check all 5 agents exist in both `flutter/mobile/agents/` and `flutter/desktop/agents/`.
+- Check all skills exist in `flutter/mobile/skills/` and `flutter/desktop/skills/`.
+- Check all architecture plans exist in `flutter/mobile/architecture_plans/` and `flutter/desktop/architecture_plans/`.
+- Run `bash -n` on all `.sh` scripts.
+- Validate `manifest.json`.

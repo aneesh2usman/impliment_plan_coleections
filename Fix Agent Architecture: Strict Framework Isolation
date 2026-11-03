@@ -1,0 +1,228 @@
+# Fix Agent Architecture: Strict Framework Isolation
+
+## Goal
+
+Refactor every framework package (`django/`, `react/`, `vuejs/`, `flutter/mobile/`, `flutter/desktop/`, `wordpress/`) to be **fully self-contained and independently portable**. After copying any single framework package into a new project, the agent must work correctly without requiring anything from the original `myproject_agent_skill_prompt_files/` repository.
+
+---
+
+## Research Findings
+
+### Current State
+
+The architecture is **already well-structured** — each framework has its own `AGENTS.md`, local `agents/`, local `skills/`, `architecture_plans/`, `automation/`, and `templates/` directories. The framework-specific AGENTS.md files and agent files reference **only local relative paths** (e.g., `agents/planner.agent.md`, `skills/django-models/SKILL.md`).
+
+### Issues Found
+
+| Category | Location | Issue |
+|---|---|---|
+| **Parent-path refs in agent files** | `django/agents/*.agent.md` | Links use `../skills/...` relative paths — which is **correct** for local navigation (agents → sibling skills within django/), NOT cross-package leakage |
+| **Parent-path refs in README.md** | All framework `README.md` files | References to `../automation/README.md`, `../PROJECT_SETUP.md`, `../../automation/README.md` — pointing to **root-level files that won't exist** when the package is copied |
+| **Absolute paths** | `react/automation/update-agent.sh` line 23, `react/README.md` lines 24, 27 | Hardcoded `/home/aneesh/Documents/react/enteglow-site` |
+| **Absolute paths** | `AI_CODING_AGENT_ARCHITECTURE_BLUEPRINT.md` | 20+ hardcoded `/home/aneesh/...` paths — but this is a root-only document, not in any framework |
+| **Mandatory Graphify** | Root `AGENTS.md` step 3 + Django planner agent | Graphify AST analysis described as "mandatory" even for simple tasks |
+| **Missing `references/` dir** | `flutter/mobile/`, `flutter/desktop/` | No `references/` directory present |
+| **Missing `templates/` dir** | `flutter/mobile/` | No `templates/` directory present |
+| **`foundation/` clarity** | All frameworks except WordPress | `foundation/` contains application starter code but is not clearly marked as optional template content |
+
+### What's Already Good (No Changes Needed)
+
+- ✅ Each framework has its own `AGENTS.md` — self-sufficient entry point
+- ✅ Each framework has its own `agents/` directory with local agents
+- ✅ Each framework has its own `skills/` directory with framework-specific skills (including local graphify, docker, git-hooks skills)
+- ✅ The `../skills/...` references in `django/agents/*.agent.md` are **intra-package** (agent → sibling skill), not cross-package
+- ✅ No framework AGENTS.md references sibling frameworks
+- ✅ No framework depends on root `manifest.json` for operation
+- ✅ `react/automation/update-agent.sh` already deploys the React package as a standalone unit
+- ✅ Skills use progressive disclosure (each skill in its own directory)
+- ✅ Agent/skill separation is already clean
+
+---
+
+## Proposed Changes
+
+### Component 1: Fix README.md Parent-Path References
+
+Each framework's `README.md` has 2-4 links pointing to root-level files (`../automation/README.md`, `../PROJECT_SETUP.md`, `../../PROJECT_SETUP.md`). These break when the package is copied standalone.
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/README.md)
+- Remove/replace references to `../automation/README.md` and `../PROJECT_SETUP.md` (lines 352, 415)
+- Replace with self-contained inline instructions or remove the links
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/README.md)
+- Remove/replace references to `../automation/README.md` and `../PROJECT_SETUP.md` (lines 355, 394)
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/README.md)
+- Remove/replace references to `../automation/README.md` and `../PROJECT_SETUP.md` (lines 294, 346)
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/README.md)
+- Remove/replace references to `../automation/README.md` and `../PROJECT_SETUP.md` (lines 272, 314)
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/desktop/README.md)
+- Remove/replace references to `../../automation/README.md` and `../../PROJECT_SETUP.md` (lines 271, 320)
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/mobile/README.md)
+- Remove/replace references to `../../automation/README.md` and `../../PROJECT_SETUP.md` (lines 263, 312)
+
+---
+
+### Component 2: Remove Absolute Paths
+
+#### [MODIFY] [update-agent.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/update-agent.sh)
+- Line 23: Replace `/home/aneesh/Documents/react/enteglow-site` with generic placeholder `~/my-react-project`
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/README.md)
+- Lines 24, 27: Replace `/home/aneesh/Documents/react/enteglow-site` with generic `/path/to/your/react-project`
+
+---
+
+### Component 3: Make Graphify Optional in Agent Workflow
+
+The Django planner agent makes Graphify/AST analysis appear mandatory for every task. Per the user's requirement (§6), Graphify should be used only when useful.
+
+#### [MODIFY] [planner.agent.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/agents/planner.agent.md)
+- Line 54: Change "Mandate pre-commit system checks... and post-commit Graphify AST graph updates" to make Graphify conditional
+- Line 60: Change "mandatory validation commands" to include Graphify only when applicable
+- Lines 64, 68: Update completion criteria to make Graphify optional
+
+#### [MODIFY] [implementer.agent.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/agents/implementer.agent.md)
+- Line 44: Change "Verify post-commit Git hook updates `graphify-out/graph.json`" to conditional
+- Line 52: Make Graphify verification optional in completion criteria
+
+#### [MODIFY] [AGENTS.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/AGENTS.md)
+- Update the git-hooks skill description (line 74) to say "Optional" instead of "Mandatory"
+
+> [!NOTE]
+> The root `AGENTS.md` (the multi-framework catalog) also has "Mandatory Graphify" in step 3. Since that file is root-only and NOT part of any framework package, we will update it for consistency but it does not affect isolation.
+
+---
+
+### Component 4: Add Missing Directories to Flutter Packages
+
+Both the user requirement and consistent structure require `references/` and `templates/` in all packages.
+
+#### [NEW] `flutter/mobile/references/.gitkeep`
+- Create empty `references/` directory for Flutter Mobile
+
+#### [NEW] `flutter/mobile/templates/graphify/.graphifyignore`
+- Copy graphify template for Flutter Mobile (matching desktop and other frameworks)
+
+#### [NEW] `flutter/desktop/references/.gitkeep`
+- Create empty `references/` directory for Flutter Desktop
+
+---
+
+### Component 5: Mark foundation/ as Optional Template Content
+
+#### [MODIFY] [AGENTS.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/AGENTS.md)
+- Add a note in section 2 clarifying that `foundation/` is **optional starter/template code**, not mandatory agent infrastructure
+
+#### [MODIFY] [AGENTS.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/AGENTS.md)
+- Add footer note that `foundation/` is optional template code
+
+#### [MODIFY] [AGENTS.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/AGENTS.md)
+- Add footer note that `foundation/` is optional template code
+
+#### [MODIFY] [AGENTS.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/mobile/AGENTS.md)
+- Add footer note that `foundation/` is optional template code
+
+#### [MODIFY] [AGENTS.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/desktop/AGENTS.md)
+- Add footer note that `foundation/` is optional template code
+
+---
+
+### Component 6: Simplify Root AGENTS.md (Graphify Optional)
+
+#### [MODIFY] [AGENTS.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/AGENTS.md)
+- Change step 3 from "Mandatory Graphify AST Codebase Inspection" to "Optional: Graphify AST Codebase Inspection (for large/unfamiliar projects)"
+- Simplify the 10-step workflow to the user's preferred default
+
+---
+
+### Component 7: Automated Isolation Validation Script
+
+#### [NEW] [validate-isolation.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/validate-isolation.sh)
+
+A bash script that validates any framework package for strict isolation. Checks for:
+- Absolute paths (`/home/...`)
+- Parent path escapes in `.md`/`.json` files that reference outside the package (`../PROJECT_SETUP.md`, `../automation/README.md`, `../../automation/README.md`)
+- References to sibling frameworks
+- References to root-only files (`manifest.json`, root `AGENTS.md`)
+- Missing essential directories (`agents/`, `skills/`)
+
+Usage:
+```bash
+./validate-isolation.sh django/
+./validate-isolation.sh react/
+./validate-isolation.sh flutter/mobile/
+```
+
+---
+
+### Component 8: Update Root-Level Documentation
+
+#### [MODIFY] [AI_CODING_AGENT_ARCHITECTURE_BLUEPRINT.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/AI_CODING_AGENT_ARCHITECTURE_BLUEPRINT.md)
+- Remove absolute paths (this is a root documentation file, not part of any framework package, but should still be clean)
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/README.md)
+- Add section documenting the isolation architecture and how to copy a framework package
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **Question 1: `../skills/...` references in `django/agents/*.agent.md`**
+> 
+> The Django agent files reference skills using `../skills/django-models/SKILL.md`. This is an **intra-package relative path** (from `django/agents/` up to `django/skills/`), NOT a cross-package escape. When you copy `django/` into `backend-project-a/`, the path `../skills/` resolves to `backend-project-a/skills/` — which is correct.
+> 
+> Should I leave these as-is (they work correctly after copy), or normalize to root-relative paths like `skills/django-models/SKILL.md`?
+
+> [!IMPORTANT]
+> **Question 2: `foundation/` directories**
+> 
+> The user requirement says "Do not put framework code in the agent template" and to keep starter code under `templates/`. Should I:
+> - **(A)** Rename `foundation/` to `templates/foundation/` across all packages, or
+> - **(B)** Keep `foundation/` where it is but add clear documentation that it is optional template/starter code (not agent infrastructure)?
+> 
+> Option B is lower-risk and preserves the existing `update-agent.sh` scripts that reference `foundation/`.
+
+> [!IMPORTANT]
+> **Question 3: Flutter parent `AGENTS.md`**
+> 
+> `flutter/AGENTS.md` is a thin router pointing to `desktop/AGENTS.md` and `mobile/AGENTS.md`. When copying `flutter/mobile/` standalone, this parent file is not included. The user requirement says `flutter/mobile/` must be independently copyable. The mobile `AGENTS.md` is already self-sufficient. Should I:
+> - **(A)** Leave `flutter/AGENTS.md` as-is (it's only useful in the full repository), or
+> - **(B)** Remove it entirely?
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+1. **Isolation validation script** (`validate-isolation.sh`) run against all 6 framework packages:
+   ```bash
+   ./validate-isolation.sh django/
+   ./validate-isolation.sh react/
+   ./validate-isolation.sh vuejs/
+   ./validate-isolation.sh flutter/mobile/
+   ./validate-isolation.sh flutter/desktop/
+   ./validate-isolation.sh wordpress/
+   ```
+   All must pass with: `External dependencies: 0`, `Absolute paths: 0`, `Sibling framework references: 0`
+
+2. **Copy-and-isolate test** for Django:
+   ```bash
+   mkdir -p /tmp/test-django-project
+   cp -r django/* /tmp/test-django-project/
+   ./validate-isolation.sh /tmp/test-django-project/
+   # Verify AGENTS.md exists and all referenced agents/skills/plans exist
+   ```
+
+3. **Copy-and-isolate test** for all other frameworks (same pattern)
+
+### Manual Verification
+
+- Review each modified README.md to confirm links are either local or removed
+- Confirm the React `update-agent.sh` help text uses generic paths
+- Verify Django planner/implementer agent files no longer force Graphify on every task

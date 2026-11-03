@@ -1,0 +1,79 @@
+# Implementation Plan — 24-Hour Custom Timelapse Image Selection
+
+## Overview & Analogy
+Imagine our system as a digital storage house that creates summary motion films (timelapses) from captured site photos. 
+Normally, our daily photo clerk only collects pictures taken during daylight hours (6:00 AM to 6:00 PM). 
+
+When the user turns ON the **"Include 24-hour images"** switch, a dedicated 24-hour photo clerk takes over. This clerk selects photos continuously across the entire day and night (full 24-hour period) for the chosen start and end dates. The selected photos are then delivered directly to our existing film manufacturing line. 
+
+If the 24-hour switch is OFF, the regular daylight photo clerk handles the request exactly as before without any changes.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **No Database Migration Required**: The 24-hour preference will be stored inside the existing configuration settings box (`extra_settings` JSON field) on the timelapse setup card.
+> 
+> **Seamless Integration**: The video creation engine remains unchanged. Only the photo gathering step receives a specialized 24-hour selection worker when enabled.
+
+---
+
+## Proposed Changes
+
+### Backend — `rawadhai_backend`
+
+#### [MODIFY] [camera_image_fatcher.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/camera_image_fatcher.py)
+- Create a new, dedicated method `get_video_generate_images_24h(camera_id, start_date, end_date)` on `CameraImageDataDBFetcher`.
+- When called, it operates with `day_time_only=False` to fetch photos across the full 24-hour period (both day and night).
+- Applies selection density based on the total days of the requested range:
+  - **1 to 30 days (<= 30 days)**: Selects photos every 10 minutes continuously day and night (~144 photos/day).
+  - **Over 30 days (> 30 days)**: Selects 12 photos/day continuously across day and night (~every 2 hours / 120-minute interval).
+
+#### [MODIFY] [timelapse_videos_with_progress.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/timelapse_videos_with_progress.py)
+- Update `fetch_image_keys(project_id, camera_id, start_date, end_date, include_24_hours=False)` to check if 24-hour mode is enabled.
+- If 24-hour mode is enabled, invoke `get_video_generate_images_24h`.
+- Otherwise, invoke the unchanged standard `get_video_generate_images`.
+- In `process_video`, inspect `timelapseconfig.extra_settings` for `include_24_hours` and pass it to `fetch_image_keys`.
+
+#### [MODIFY] [TimelapseVideosSerializer.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/api/serializer/TimelapseVideosSerializer.py)
+- Accept `include_24_hours` / `is_24_hours` from request data during timelapse creation.
+- Save `include_24_hours: true` into the `extra_settings` dictionary of `TimelapseConfig`.
+
+---
+
+### Frontend — `rawadhai_frontend`
+
+#### [MODIFY] [DateTimePicker.vue](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_frontend/src/components/common/DateTimePicker.vue)
+- Add "Include 24-hour images" toggle switch inside the date/time picker dropdown with description text ("Use both day and night time images for the time lapse").
+
+#### [MODIFY] [AddCreateTimelapsePopup.vue](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_frontend/src/components/cameras/timelapse/AddCreateTimelapsePopup.vue)
+- Bind the 24-hour toggle state to `itemAdd` during timelapse creation request.
+- Pass `include_24_hours` parameter in the API payload.
+
+#### [MODIFY] [en.json](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_frontend/src/views/marketplace/Multilanguage/VueI18n/locales/en.json)
+- Add user-friendly text labels for `include24HourImages` and `useBothDayAndNightImages`.
+
+---
+
+### Documentation & Practice Materials
+
+#### [NEW] [timelapse_24h_image_selection.md](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/docs/timelapse_24h_image_selection.md)
+- Markdown documentation in `rawadhai_module/docs/` explaining the feature in clear, point-by-point format.
+
+#### [NEW] [test_24h_timelapse_selection.ipynb](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/practice/rawadhai_module/test_24h_timelapse_selection.ipynb)
+- Mandatory Jupyter practice notebook in `practice/rawadhai_module/` demonstrating the 24-hour photo selection logic, test cases, and verification steps.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Run Django tests inside Docker container:
+  `docker compose exec rawadh_backend python manage.py test rawadhai_module`
+- Verify practice notebook execution on host:
+  Run test cells in `practice/rawadhai_module/test_24h_timelapse_selection.ipynb`.
+
+### Manual Verification
+- Test creating custom timelapse with "Include 24-hour images" toggle **OFF**: verify existing daytime photo selection behavior is unchanged.
+- Test creating custom timelapse with "Include 24-hour images" toggle **ON**: verify photos from night and day are selected and sent to the video creation pipeline.

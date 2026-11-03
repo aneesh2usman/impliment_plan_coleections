@@ -1,0 +1,181 @@
+# Implementation Plan: Universal Business-Feature Module Architecture Across All Frameworks
+
+This plan details the comprehensive restructuring of **all 5 supported frameworks** (**Django, Flutter Mobile, Flutter Desktop, Vue.js, and React.js**) to enforce a strict **self-contained business-feature module-based architecture**.
+
+---
+
+## Core Rule & Golden Principle
+
+> **All business-feature-related code MUST remain inside that feature's module.**  
+> A feature module MUST own 100% of its resources (pages/screens, components/widgets, services, state management, models/types, routes, API integrations, tasks, tests, and feature-specific utilities).
+
+If a feature module (e.g. `customers`) is removed, **all** related pages, components, services, state, routes, types, tasks, and tests are deleted with it, leaving zero orphaned business code in global directories.
+
+Global directories (`core/`, `shared/`, `common/`) are strictly reserved for **truly shared non-domain application infrastructure**.
+
+---
+
+## Target Framework Architecture Specifications
+
+### 1. Django Architecture
+- **Core Infrastructure (`project/core/`)**: Authentication mechanisms, custom permissions, exception handling, base serializers/models, common utilities.
+- **Business Modules (`project/modules/<feature_name>/`)**:
+  - `models/` (or `models.py`)
+  - `views/` (or `views.py`)
+  - `serializers/` (or `serializers.py`)
+  - `services/` (or `services.py`)
+  - `urls/` (or `urls.py`)
+  - `tasks/` (or `tasks.py`)
+  - `tests/` (or `tests.py`)
+  - Example modules: `modules/users/`, `modules/customers/`, `modules/reports/`.
+
+```text
+django/
+└── foundation/
+    ├── core/
+    │   ├── authentication/
+    │   ├── permissions/
+    │   ├── exceptions/
+    │   └── common/
+    ├── modules/
+    │   ├── users/
+    │   ├── customers/
+    │   └── reports/
+    └── settings/
+```
+
+---
+
+### 2. Flutter Mobile Architecture
+- **Core Infrastructure (`lib/core/`)**: SQLite/Drift database connection, network client & interceptors, authentication state, common adaptive widgets.
+- **Feature Modules (`lib/features/<feature_name>/`)**:
+  - `presentation/` (pages/screens, widgets, providers/viewmodels)
+  - `domain/` (entities, use cases)
+  - `data/` (repositories, data sources, DTOs)
+  - Example features: `features/authentication/`, `features/customers/`, `features/reports/`.
+
+```text
+flutter/mobile/
+└── foundation/
+    └── lib/
+        ├── core/
+        │   ├── database/
+        │   ├── network/
+        │   ├── authentication/
+        │   └── common/
+        └── features/
+            ├── customers/
+            │   ├── data/
+            │   ├── domain/
+            │   └── presentation/
+            └── reports/
+```
+
+---
+
+### 3. Flutter Desktop Architecture
+- **Core Infrastructure (`lib/core/`)**: Hardware integration (serial port communication, RS232 stream buffers), Drift encrypted database setup, Windows/Linux native bridge wrappers, window controls, common UI components.
+- **Feature Modules (`lib/features/<feature_name>/`)**:
+  - `presentation/` (desktop views/pages, widgets, providers)
+  - `domain/` (desktop models, use cases)
+  - `data/` (hardware repositories, DAOs)
+  - Example features: `features/weighing/`, `features/customers/`, `features/reports/`.
+
+```text
+flutter/desktop/
+└── foundation/
+    └── lib/
+        ├── core/
+        │   ├── hardware/          # Serial communication & hardware drivers
+        │   ├── db/                # Drift SQLite WAL mode DB
+        │   └── common/            # Shared desktop widgets
+        └── features/
+            ├── weighing/
+            └── customers/
+```
+
+---
+
+### 4. Vue.js Architecture
+- **Shared Infrastructure (`src/shared/`)**: UI primitives (Button.vue, Modal.vue, Dialog.vue), shared generic composables (useTheme, useWindowSize), Axios API Client factory, shared types.
+- **Feature Modules (`src/modules/<feature_name>/`)**:
+  - `pages/` (CustomerList.vue, CustomerDetails.vue, CustomerCreate.vue)
+  - `components/` (CustomerTable.vue, CustomerForm.vue)
+  - `services/` (customerApi.ts)
+  - `stores/` (customerStore.ts)
+  - `composables/` (useCustomers.ts)
+  - `types/` (customer.ts)
+  - `routes/` (customerRoutes.ts)
+  - `tests/` (CustomerTable.spec.ts)
+  - `index.ts`
+
+```text
+vuejs/
+└── foundation/
+    └── src/
+        ├── shared/
+        │   ├── components/
+        │   ├── composables/
+        │   ├── services/
+        │   └── types/
+        └── modules/
+            └── customers/
+```
+
+---
+
+### 5. React.js Architecture
+- **Shared Infrastructure (`src/shared/`)**: UI primitives (Button.tsx, Modal.tsx, ErrorBoundary.tsx), generic custom hooks (useDebounce, useTheme), base HTTP client, pure utils, core types.
+- **Feature Modules (`src/modules/<feature_name>/`)**:
+  - `pages/` (CustomerList.tsx, CustomerDetails.tsx, CustomerCreate.tsx)
+  - `components/` (CustomerTable.tsx, CustomerForm.tsx)
+  - `services/` (customerApi.ts)
+  - `store/` (customerSlice.ts)
+  - `hooks/` (useCustomers.ts)
+  - `types/` (customer.ts)
+  - `routes/` (customerRoutes.ts)
+  - `tests/` (CustomerTable.test.tsx)
+  - `index.ts`
+
+```text
+react/
+└── foundation/
+    └── src/
+        ├── shared/
+        │   ├── components/
+        │   ├── hooks/
+        │   ├── services/
+        │   └── types/
+        └── modules/
+            └── customers/
+```
+
+---
+
+## Comprehensive Implementation Steps
+
+### Phase 1: Reorganize Foundation Templates (Code Base Scaffolding)
+1. **React.js (`react/foundation/`)**: Reorganize into `src/shared/` and `src/modules/example-module/` containing `pages/`, `components/`, `services/`, `store/`, `hooks/`, `types/`, `routes/`, `tests/`, `index.ts`.
+2. **Vue.js (`vuejs/foundation/`)**: Reorganize into `src/shared/` and `src/modules/example-module/` containing `pages/`, `components/`, `services/`, `stores/`, `composables/`, `types/`, `routes/`, `tests/`, `index.ts`.
+3. **Flutter Desktop (`flutter/desktop/foundation/`)**: Reorganize into `lib/core/` and `lib/features/example_feature/` (data, domain, presentation).
+4. **Flutter Mobile (`flutter/mobile/foundation/`)**: Create `flutter/mobile/foundation/` with `lib/core/` and `lib/features/example_feature/`.
+5. **Django (`django/foundation/`)**: Structure Django foundation apps into `core/` and `modules/` (e.g., `modules/users/`, `modules/audit_log/`, `modules/background_jobs/`).
+
+### Phase 2: Update Entry Points, Documentation & Architecture Plans
+1. **Entry Point Files (`AGENTS.md`, `AGENT_USAGE.md`, `README.md`)**:
+   - Update directory tree diagrams and explicit architectural rules in `django/`, `flutter/mobile/`, `flutter/desktop/`, `vuejs/`, and `react/`.
+2. **Architecture Plans (`architecture_plans/`)**:
+   - Update component, module, and state management architecture plans across all 5 framework packages.
+3. **Skills (`skills/`)**:
+   - Update `code-standards` and `implementation-planning` skills across all 5 frameworks to mandate business-feature module layout.
+
+---
+
+## Verification Plan
+
+### Automated Verification
+1. **Bootstrapper Setup Verification**: Execute `./automation/linux/setup-project.sh` for `django`, `flutter-mobile`, `flutter-desktop`, `vuejs`, and `react`. Verify that generated projects contain feature-module directories out-of-the-box.
+2. **Manifest Check**: Validate `manifest.json` using python JSON parser.
+
+### Manual Verification
+- Review all generated READMEs, AGENTS.md, AGENT_USAGE.md, architecture plans, and skill files to ensure 100% consistent feature-module messaging across all 5 frameworks.

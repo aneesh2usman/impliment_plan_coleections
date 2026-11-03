@@ -1,0 +1,77 @@
+# Implementation Plan - Timelapse Video Time Range & Playback Speed Adjustments
+
+## 1. Overview & Problem Description
+- **Issue 1 (Daytime Selection Time Range)**: For dates starting 23 September 2026 onwards, default and custom daytime timelapses select images from 3:00 AM to 3:00 PM instead of 6:00 AM to 6:00 PM local site time.
+- **Issue 2 (Input Datetime Shift)**: When users select custom timelapse dates (e.g. `21-Sep-2026 00:00:00` to `22-Sep-2026 00:00:00`), DRF parsed naive inputs assuming server UTC, creating unexpected +3 hour offset shifts for Saudi Arabia (`Asia/Riyadh`).
+- **Issue 3 (24-Hour Playback Speed)**: When "Include 24-Hour Images" is enabled, playback becomes noticeably slower between 9:00 PM and 11:59 PM due to frame/image density clustering during that window.
+
+---
+
+## 2. Impact Analysis: Does this Fix Impact Default Timelapse?
+**YES, IT POSITIVELY FIXES DEFAULT TIMELAPSE AS WELL.**
+
+Both **Default Timelapse** (automatically scheduled daily/monthly background jobs) and **Custom Timelapse** (on-demand user API requests) share the exact same underlying image retrieval clerk (`CameraImageDataDBFetcher`) and video generator engine (`S3CameraVideoV2`).
+
+### Comparison Table
+
+| Feature / Aspect | Default Timelapse (Scheduled) | Custom Timelapse (On-Demand) |
+| :--- | :--- | :--- |
+| **Trigger Mechanism** | Background Celery Cron Schedule | User API Request (`POST /api/v1/project/9/camera/video-images/`) |
+| **Shared Engine** | `CameraImageDataDBFetcher` + `S3CameraVideoV2` | `CameraImageDataDBFetcher` + `S3CameraVideoV2` |
+| **Time Range Impact** | **Fixed**: Automatically selects 06:00 AM – 06:00 PM local site time across all dates. | **Fixed**: Automatically selects 06:00 AM – 06:00 PM local site time across all dates. |
+| **24h Speed Impact** | N/A (Default timelapses are daytime-only). | **Fixed**: Eliminates 9 PM – 11:59 PM playback slowdown when `include_24_hours: true`. |
+
+---
+
+## 3. Concrete Request & Processing Examples (User Strict Example)
+
+### Project/Camera Site Location: `Asia/Riyadh` (Saudi Arabia, UTC+3)
+
+#### Scenario A: Include 24-Hour Images = ON
+- **User Selects**:
+  - `start_date`: `21-Sep-2026 00:00:00`
+  - `end_date`: `22-Sep-2026 00:00:00`
+- **Backend Processing**:
+  - The site timezone `Asia/Riyadh` is resolved from project/camera settings.
+  - Input strings are normalized via `normalize_input_datetime()` directly into `Asia/Riyadh`:
+    - `Start`: `21-Sep-2026 00:00:00 Asia/Riyadh` (`2026-09-20 21:00:00 UTC`)
+    - `End`: `22-Sep-2026 00:00:00 Asia/Riyadh` (`2026-09-21 21:00:00 UTC`)
+  - No +3 or -3 hour wall-clock shift occurs. The exact 24-hour period selected by the user in `Asia/Riyadh` is queried from the database.
+  - Uniform interval sampling (`id__in=selected_ids`) selects 1 frame per interval slot across the entire 24-hour day, guaranteeing smooth playback.
+
+#### Scenario B: Include 24-Hour Images = OFF (Daytime Only)
+- **User Selects**:
+  - `start_date`: `21-Sep-2026 00:00:00`
+  - `end_date`: `22-Sep-2026 00:00:00`
+- **Backend Processing**:
+  - Same exact site boundary: `21-Sep-2026 00:00:00 Asia/Riyadh` to `22-Sep-2026 00:00:00 Asia/Riyadh`.
+  - In addition, daytime filtering (`day_time_only=True`) extracts `local_hour` and `local_minute` in `Asia/Riyadh` using PostgreSQL `ExtractHour` and `ExtractMinute`.
+  - Filters photos strictly between `06:00:00` and `18:00:00` local site time in `Asia/Riyadh`.
+
+---
+
+## 4. Main Tasks & Subtasks
+- [x] **Task 1: Comprehensive Site Timezone Integration**
+  - Updated `get_image_base_filter()`, `get_number_of_days()`, `get_camera_images_by_year()`, `get_camera_images_by_month()`, `get_camera_images_by_month_mid_hour()`, and `get_camera_images_by_month_old()` to use `ExtractHour`/`TruncDate` with `tzinfo=site_tz`.
+  - Updated `parse_date()` to support `tz=site_tz`.
+- [x] **Task 2: Serializer Input Datetime Normalization**
+  - Added `normalize_input_datetime()` in `converter.py`.
+  - Integrated into `TimelapseConfigSerializer` (`validate()` and `check_camera_image_exist()`) to bind naive string inputs to `site_tz`.
+- [x] **Task 3: Unique ID Interval Sampling (24-Hour Speed Fix)**
+  - Updated `set_intervels_queryset()` to sample unique record `(id, capture_date)` pairs.
+  - Guaranteed exact 1 image per interval slot, eliminating 9 PM – 11:59 PM playback slowdowns.
+- [x] **Task 4: Verification & Safety Drills**
+  - Unit tests passed (7/7 tests OK).
+  - Django system checks passed (`System check identified no issues`).
+
+---
+
+## 5. Files Affected
+- [rawadhai_module/camera_image_fatcher.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/camera_image_fatcher.py)
+- [rawadhai_module/api/serializer/TimelapseVideosSerializer.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/api/serializer/TimelapseVideosSerializer.py)
+- [rawadhai_module/utils/timezone_utils/converter.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/utils/timezone_utils/converter.py)
+- [rawadhai_module/utils/timezone_utils/__init__.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/utils/timezone_utils/__init__.py)
+- [rawadhai_module/timelapse_videos_with_progress.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/timelapse_videos_with_progress.py)
+- [rawadhai_module/tests/test_24h_timelapse_selection.py](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/tests/test_24h_timelapse_selection.py)
+- [rawadhai_module/docs/timelapse_time_range_and_speed_fix.md](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/rawadhai_module/docs/timelapse_time_range_and_speed_fix.md)
+- [practice/rawadhai_module/test_timelapse_time_range_and_speed_fix.ipynb](file:///home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/practice/rawadhai_module/test_timelapse_time_range_and_speed_fix.ipynb)

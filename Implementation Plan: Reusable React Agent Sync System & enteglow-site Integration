@@ -1,0 +1,66 @@
+# Implementation Plan: Reusable React Agent Sync System & enteglow-site Integration
+
+This plan implements a reusable, cross-platform React agent update and synchronization system in `react/automation/` (`update-agent.sh` and `update-agent.ps1`), updates `react/README.md` with complete usage instructions, and applies the updated React agent structure to the `/home/aneesh/Documents/react/enteglow-site/` project.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> - **Framework Isolation**: All sync and update scripts (`update-agent.sh`, `update-agent.ps1`, `setup-project.sh`, `setup-project.ps1`) remain strictly isolated inside `react/automation/`.
+> - **Context Preservation**: The sync script checks existing target files, updates standard React agent files (`AGENTS.md`, `agents/`, `skills/`, `architecture_plans/`, `automation/`), preserves project-specific custom files, and outputs detailed `[ADDED]`, `[UPDATED]`, `[PRESERVED]` logs.
+> - **Target Project Synchronization**: The script will be executed against `/home/aneesh/Documents/react/enteglow-site/` to verify clean synchronization and hook installation.
+
+---
+
+## Proposed Changes
+
+### 1. Cross-Platform React Agent Sync Scripts
+
+#### [NEW] [react/automation/update-agent.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/update-agent.sh)
+- Linux / macOS bash script that accepts a target React project path (e.g. `/home/aneesh/Documents/react/enteglow-site/`).
+- Syncs React `AGENTS.md`, `AGENT_USAGE.md`, `agents/*.md`, `skills/`, `architecture_plans/`, and isolated `automation/` scripts into the target project.
+- Configures AI tool entry points (`CLAUDE.md`, `GEMINI.md`, `.codex/instructions.md`, `.antigravity/README.md`) and installs mandatory pre-commit (`npx tsc --noEmit`) and post-commit (`graphify`) Git hooks.
+- Displays colored status reporting (`[ADDED]`, `[UPDATED]`, `[PRESERVED]`).
+
+#### [NEW] [react/automation/update-agent.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/update-agent.ps1)
+- Windows PowerShell equivalent of `update-agent.sh` with identical features, cross-platform path handling, and status reporting.
+
+#### [MODIFY] [react/automation/setup-project.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/setup-project.sh)
+#### [NEW] [react/automation/setup-project.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/automation/setup-project.ps1)
+- Ensures `setup-project.sh` and `setup-project.ps1` inside `react/automation/` allow initializing new projects or delegating to `update-agent`.
+
+---
+
+### 2. Comprehensive React Agent Documentation
+
+#### [MODIFY] [react/README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/README.md)
+Update documentation with comprehensive sections covering:
+- Purpose of the framework-isolated React Agent system.
+- How to apply the agent to new or existing React projects.
+- How to run `update-agent.sh` / `update-agent.ps1` with target project arguments (e.g. `/home/aneesh/Documents/react/enteglow-site/`).
+- Which files are copied/synced (`AGENTS.md`, `agents/`, `skills/`, `architecture_plans/`, `automation/`).
+- How existing project-specific agent context is preserved.
+- Cross-platform Linux and Windows usage commands.
+- Long-term maintenance workflow: How to update the React agent template in `react/` and synchronize changes across existing projects.
+
+---
+
+### 3. Application to Target Project (`enteglow-site`)
+
+#### Sync & Verify Target Project
+- Execute `bash react/automation/update-agent.sh /home/aneesh/Documents/react/enteglow-site/`.
+- Verify clean execution, hook installation, and file synchronization in `enteglow-site`.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+1. **Sync Script Execution**: Run `bash react/automation/update-agent.sh /home/aneesh/Documents/react/enteglow-site/` and verify status output.
+2. **Git Hook Execution in Target**: Run pre-commit and post-commit hook scripts inside `/home/aneesh/Documents/react/enteglow-site/` to confirm proper configuration.
+3. **Typecheck Verification**: Run `npx tsc --noEmit` inside `enteglow-site`.
+
+### Manual Verification
+- Inspect `react/README.md` to ensure all required sections are clear, complete, and accurate.
+- Inspect `git status` to ensure zero lost files in template repository.

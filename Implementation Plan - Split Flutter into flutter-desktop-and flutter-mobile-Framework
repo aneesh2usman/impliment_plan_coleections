@@ -1,0 +1,78 @@
+# Implementation Plan - Split Flutter into `flutter-desktop/` and `flutter-mobile/` Framework Packages
+
+Split the generic `flutter/` directory into two top-level, 100% self-contained framework packages:
+1. **`flutter-desktop/`**: Tailored for Windows, Linux, and macOS desktop applications with Drift encrypted SQLite database, WAL mode PRAGMA tuning, DAOs, serial hardware communication service, MSVC DLL bundling, and NSIS Windows installer automation (`build_release.ps1`).
+2. **`flutter-mobile/`**: Tailored for Android and iOS mobile applications with mobile widget architecture, Provider reactive state management, and mobile build pipelines.
+
+---
+
+## Key Architecture Principles & Requirements
+
+1. **Strict Framework Isolation**:
+   - `flutter-desktop/`: 100% self-contained top-level framework package.
+   - `flutter-mobile/`: 100% self-contained top-level framework package.
+   - `django/`, `vuejs/`, `react/`, `wordpress/`.
+2. **Strict Safety**: Read-only reference inspection of `weighingscale_app`, `rawadhai_backend`, and `rawadhai_frontend`. **NEVER** edit, modify, move, rename, or delete any files in those three reference projects.
+3. **No Legacy References**: Update all setup scripts (`setup-project.sh`, `setup-project.ps1`), documentation (`README.md`, `PROJECT_SETUP.md`, `AGENTS.md`), and JSON manifest (`manifest.json`) to reference `flutter-desktop` and `flutter-mobile` directly.
+
+---
+
+## Proposed Directory Structure
+
+### Top-Level Directory Layout
+
+```text
+.
+├── AGENTS.md                                    # Root generic agent entry point
+├── PROJECT_SETUP.md                             # Guide for instantiating new projects from template
+├── README.md                                    # Master index & documentation
+├── manifest.json                                # Machine-readable catalog (v3.1.0)
+│
+├── django/                                      # 🐍 Self-contained Django package
+├── flutter-desktop/                             # 🖥️ Self-contained Flutter Desktop package
+│   ├── AGENTS.md
+│   ├── AGENT_USAGE.md
+│   ├── agents/
+│   ├── skills/
+│   ├── architecture_plans/
+│   ├── foundation/                              # Drift SQLite DB (app_database.dart), DAOs, serial hardware service
+│   ├── automation/                              # Windows build_release.ps1, setup.nsi, linux/windows scripts
+│   ├── docker/
+│   ├── templates/graphify/
+│   └── git-ignore/
+├── flutter-mobile/                              # 📱 Self-contained Flutter Mobile package
+│   ├── AGENTS.md
+│   ├── AGENT_USAGE.md
+│   ├── agents/
+│   ├── skills/
+│   ├── architecture_plans/
+│   ├── foundation/                              # Mobile DAOs, Provider state models, mobile sync
+│   ├── automation/
+│   ├── docker/
+│   ├── templates/graphify/
+│   └── git-ignore/
+├── react/                                       # ⚛️ Self-contained React package
+├── vuejs/                                       # 💚 Self-contained Vue.js package
+└── wordpress/                                   # 🌐 Self-contained WordPress package
+```
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> - `flutter/` directory will be removed and replaced by top-level `flutter-desktop/` and `flutter-mobile/` directories.
+> - Running `./automation/linux/setup-project.sh --framework flutter-desktop` or `setup-project.ps1 -Framework flutter-desktop` will initialize a desktop project.
+> - Running `./automation/linux/setup-project.sh --framework flutter-mobile` or `setup-project.ps1 -Framework flutter-mobile` will initialize a mobile project.
+
+---
+
+## Verification Plan
+
+### Automated Verification
+- Verify `flutter-desktop/` and `flutter-mobile/` exist as top-level directories.
+- Confirm old `flutter/` directory is removed.
+- Run `bash -n` syntax validation on all `.sh` scripts.
+- Validate `manifest.json` using `python3 -m json.tool`.
+- Test `setup-project.sh` for both `--framework flutter-desktop` and `--framework flutter-mobile`.
+- Verify zero reference project path leaks.

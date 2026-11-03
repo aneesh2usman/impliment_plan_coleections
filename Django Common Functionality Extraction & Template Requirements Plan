@@ -1,0 +1,204 @@
+# Django Common Functionality Extraction & Template Requirements Plan
+
+This document details the complete plan for extracting common, reusable production architecture from the reference Django project (`rawadhai_backend`) into the generic Django framework template located at [`django/`](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django).
+
+> [!IMPORTANT]
+> **Strict Reference Project Rule**: The reference project at `/home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/` remains strictly **READ-ONLY**. All modifications, additions, and architecture refinements will be written exclusively into the template directory [`django/`](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django).
+
+---
+
+## 1. Feature Classification Matrix
+
+Every feature from the reference project has been analyzed and categorized into **Core** (auto-included), **Optional** (modular/toggleable), or **Project-Specific** (excluded):
+
+| Feature / Module | Classification | Description & Rationale |
+|---|---|---|
+| **Base Settings & Split Config Architecture** | **Core** | Modular `decouple`/`dotenv` settings separation into Base, Dev, and Prod environments with env validation. |
+| **User Management (`eg_user`)** | **Core** | Custom `EgUser` (`AbstractUser`, `is_deleted`, `failed_login_attempts`, `is_locked`), `UserProfile`, custom auth backend, views, forms. |
+| **Generic JWT Infrastructure** | **Core** | Generalized `JWTAuthentication` / `JWTGroupsMiddleware` (user & group population) decoupled from company/project domain checks. |
+| **Generic API Views & Serializers** | **Core** | `CustomListCreateAPIView`, `CustomRetrieveUpdateDestroyAPIView`, `CommonListView`, `GeneralSerializer` (QueryDict mutable pre_init), `CustomMixinSerializer` (`show_<field>`). |
+| **DRF Custom Exception Handler** | **Core** | Multi-source i18n language resolution (`Content-Language`, `Accept-Language`, `?lang=`), leaf error translation, and standardized JSON response envelope. |
+| **Model Mixins & Utility Helpers** | **Core** | `CustomModelsBasicMixins` (`DirtyFieldsMixin`), `core/utils/common.py` (model converters, JSON encoders, security, string, and math helpers). |
+| **Practice Directory Pattern** | **Core (Dev)** | Reusable `practice/` directory structure with starter `.ipynb` notebooks for ORM, API, Celery, and Auth testing. |
+| **Translation Management (`translation_management`)** | **Optional** | Multilingual field translation, Google Translate integration, locale paths, dynamic registry, toggleable via `TRANSLATION_ENABLED`. |
+| **Celery & Task Infrastructure** | **Optional** | Standardized `celery.py` with `app.autodiscover_tasks()`, task signal metrics, worker health checks, and per-module task routing, toggleable via `ENABLE_CELERY`. |
+| **Background Jobs (`background_jobs`)** | **Optional** | Reusable `BackgroundJob` model (UUID, progress, JSON request/result/error, SSE streaming endpoint, retention cleaner), decoupled from project models. |
+| **CAPTCHA Module (`core/captcha`)** | **Optional** | High-legibility PIL image CAPTCHA generation and Redis/cache verification, toggleable via `ENABLE_LOGIN_CAPTCHA`. |
+| **Prometheus Monitoring (`monitoring`)** | **Optional** | `django-prometheus`, `PrometheusMetricsMiddleware`, and generic DRF/Celery/Redis metrics in `core/metrics.py`, toggleable via `ENABLE_PROMETHEUS`. |
+| **Channels / WebSockets (ASGI)** | **Optional** | Daphne + `channels` ASGI routing structure (`ProtocolTypeRouter`), toggleable via `ENABLE_CHANNELS`. |
+| **Redis Caching & Session Store** | **Optional** | `django-redis` backend configuration with fallback to `LocMemCache`, toggleable via `USE_REDIS`. |
+| **AWS S3 File Storage** | **Optional** | `django-storages` + `boto3` + CloudFront setup with fallback to local media, toggleable via `USE_AWS`. |
+| **Domain-Specific Business Logic** | **Project-Specific** | Timelapse video generation, camera stream ingest, satellite imagery, 360 video, drone uploads, weighing scale logic -> **Excluded**. |
+
+---
+
+## 2. Proposed Template Codebase Architecture
+
+The template at [`django/`](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django) will be organized into production-grade foundation packages and modular optional components:
+
+```text
+django/
+├── AGENTS.md
+├── AGENT_USAGE.md
+├── requirements/
+│   ├── base.txt                    # Core mandatory dependencies (Django, DRF, JWT, decouple, etc.)
+│   ├── optional_celery.txt         # Celery, Kombu, Flower
+│   ├── optional_channels.txt       # Channels, Daphne
+│   ├── optional_prometheus.txt     # django-prometheus, prometheus_client
+│   ├── optional_translation.txt    # deep-translator, google-cloud-translate
+│   ├── optional_s3.txt             # django-storages, boto3
+│   └── dev.txt                     # Jupyter, ipykernel, debug-toolbar, silk, pytest
+│
+├── foundation/
+│   ├── settings/                   # Generic & Toggleable Settings
+│   │   ├── __init__.py
+│   │   ├── base.py                 # Core Django, DRF, Auth, Middleware, i18n, Logging
+│   │   ├── optional.py             # Optional feature switches & configurations
+│   │   ├── dev.py                  # Local dev override
+│   │   └── prod.py                 # Production security & cache settings
+│   │
+│   ├── core/                       # Core Generic Foundation
+│   │   ├── __init__.py
+│   │   ├── views.py                # CommonListView, CustomListCreateAPIView, CustomRetrieveUpdateDestroyAPIView
+│   │   ├── serializers.py          # GeneralSerializer, CustomMixinSerializer
+│   │   ├── exception_handler.py    # Custom DRF exception handler with i18n leaf translation
+│   │   ├── models_mixins.py        # CustomModelsBasicMixins (DirtyFieldsMixin integration)
+│   │   ├── renderers.py            # CustomJSONRenderer & Standardized Envelope
+│   │   ├── parsers.py              # BrotliJSONParser & DRF default parsers
+│   │   ├── utils/
+│   │   │   ├── __init__.py
+│   │   │   └── common.py           # dict_to_model, convert_model_to_json, security, string, math helpers
+│   │   └── templatetags/
+│   │       └── common_tags.py      # Reusable template filters & tags
+│   │
+│   ├── eg_user/                    # User & Auth Core App
+│   │   ├── models.py               # EgUser (AbstractUser), UserProfile
+│   │   ├── serializers.py          # User serializers, token refresh
+│   │   ├── authentication/
+│   │   │   └── jwt_auth.py         # Generalized JWTAuthentication & JWTGroupsMiddleware
+│   │   ├── backend.py              # Custom AuthenticationBackend
+│   │   ├── views.py                # Login, Logout, User Profile, Password Management
+│   │   └── urls.py                 # User API endpoint routes
+│   │
+│   ├── celery_app/                 # Generic Celery Task Architecture
+│   │   ├── __init__.py
+│   │   ├── celery.py               # Celery app initialization, autodiscover, signal metrics
+│   │   └── base_task.py            # Generic BaseTask class with auto-retry and logging
+│   │
+│   ├── background_jobs/            # Reusable Background Job Module (Optional/Core Ready)
+│   │   ├── models.py               # BackgroundJob (UUID, task_name, progress, JSON request/result/error)
+│   │   ├── services.py             # BackgroundJobService (progress updater, logger)
+│   │   ├── views.py                # Job status, SSE stream endpoint, retry
+│   │   ├── tasks.py                # Cleanup job retention task
+│   │   └── urls.py
+│   │
+│   ├── captcha/                    # Optional CAPTCHA Module
+│   │   ├── services.py             # CaptchaService (Pillow drawing, high contrast, cache verification)
+│   │   ├── views.py                # Captcha generation & validation endpoints
+│   │   └── urls.py
+│   │
+│   ├── translation_management/     # Optional Translation Management Module
+│   │   ├── models.py               # Dynamic Translation Registry models
+│   │   ├── registry.py             # Dynamic model field translation registry
+│   │   ├── serializer_mixins.py    # TranslationSerializerMixin
+│   │   ├── viewset_mixins.py       # TranslationViewSetMixin
+│   │   ├── services/               # Translation & company info services
+│   │   ├── tasks.py                # Background translation auto-sync tasks
+│   │   ├── views.py                # Translation management API views
+│   │   └── urls.py
+│   │
+│   ├── monitoring/                 # Optional Prometheus Monitoring Module
+│   │   ├── middleware.py           # PrometheusMetricsMiddleware with endpoint normalization
+│   │   ├── metrics.py              # Core framework metrics (requests, latency, errors, celery, cache)
+│   │   └── views.py                # Custom metrics exposition endpoint
+│   │
+│   ├── practice/                   # Reusable Practice & Experiment Directory Structure
+│   │   ├── README.md               # Guidelines for practice notebooks
+│   │   ├── test_orm_queries.ipynb  # Template notebook for ORM performance experiments
+│   │   ├── test_api_call.ipynb     # Template notebook for DRF endpoint testing
+│   │   └── test_celery.ipynb       # Template notebook for async background task testing
+│   │
+│   └── asgi/                       # Optional ASGI / Channels Routing
+│       ├── routing.py              # ProtocolTypeRouter & WebSocket URLRouter
+│       └── asgi.py                 # ASGI application entry point
+```
+
+---
+
+## 3. Detailed Component Plan
+
+### 3.1 Settings Architecture (`foundation/settings/`)
+- Split settings into `base.py`, `optional.py`, `dev.py`, `prod.py`.
+- Incorporate configuration flags:
+  - `TRANSLATION_ENABLED = config('TRANSLATION_ENABLED', default=False, cast=bool)`
+  - `ENABLE_PROMETHEUS = config('ENABLE_PROMETHEUS', default=False, cast=bool)`
+  - `ENABLE_LOGIN_CAPTCHA = config('ENABLE_LOGIN_CAPTCHA', default=False, cast=bool)`
+  - `USE_REDIS = config('USE_REDIS', default=False, cast=bool)`
+  - `USE_AWS = config('USE_AWS', default=False, cast=bool)`
+  - `ENABLE_CHANNELS = config('ENABLE_CHANNELS', default=False, cast=bool)`
+  - `ENABLE_BACKGROUND_JOB_SSE = config('ENABLE_BACKGROUND_JOB_SSE', default=True, cast=bool)`
+- Dynamically build `INSTALLED_APPS` and `MIDDLEWARE` based on these flags so unused optional features don't clutter smaller Django projects.
+
+### 3.2 User Management & Generalized JWT (`foundation/eg_user/`)
+- Extract custom `EgUser` model featuring `phone_number`, `is_deleted` soft-delete flag, `failed_login_attempts`, `is_locked`.
+- Provide `UserProfile` model associated via one-to-one relationship.
+- Generalize `JWTGroupsMiddleware`:
+  - Extract user group attachment into request (`request.groups`).
+  - Decouple domain-specific `set_company`, `set_location`, `set_project`, and URL-regex checking (`check_blocked_project`) into overridable hook methods or mixins so projects can supply their own tenant/project authorization rules.
+
+### 3.3 DRF Generic Views & Serializers (`foundation/core/`)
+- Move `CommonListView`, `CustomListCreateAPIView`, `CustomRetrieveUpdateDestroyAPIView` into `foundation/core/views.py`.
+- Move `GeneralSerializer` (QueryDict mutability + `pre_init` hook) and `CustomMixinSerializer` (context-driven `show_<field>` toggles) into `foundation/core/serializers.py`.
+- Enhance `custom_exception_handler` with multi-source i18n language resolution (`Content-Language`, `Accept-Language`, `?lang=`), recursive leaf string translation (`translate_errors`), and uniform JSON envelopes.
+
+### 3.4 Common Utilities (`foundation/core/utils/common.py`)
+- Clean up `core/utils/common.py` to remove project-specific imports (`CameraStatus`, `CameraTimelapse`, `TimelapseConfig`).
+- Include all general utility functions:
+  - Data conversion: `dict_to_model`, `convert_model_to_dict`, `convert_model_to_json`, `CustomJSONEncoder`, `dictfetchall`
+  - String & HTML: `sanitize`, `cleanhtml`, `remove_invisible_characters`, `stringToBase64`, `base64ToString`
+  - Security & Crypto: `generate_api_key`, `generate_password`, `validate_password_complexity`, `validate_password_length`
+  - Debugging: `pp`, `trace_exception`
+  - Nested dictionary & math helpers: `keys_exists`, `dictDiffByKey`, `afl_round`
+
+### 3.5 Generic Celery Infrastructure (`foundation/celery_app/`)
+- Define `celery.py` with standard `app.autodiscover_tasks()` so every Django app with a `tasks.py` is discovered automatically without manual listing.
+- Include Celery event signal handlers for metrics tracking (`task_success`, `task_failure`, `task_retry`).
+- Provide modular task routing and Beat schedule patterns.
+
+### 3.6 Reusable Background Jobs Module (`foundation/background_jobs/`)
+- Generalize `BackgroundJob` model by keeping user FK and generic module/task_name/status/progress/JSON fields, while replacing hardcoded domain FKs with generic relations or optional string/ID metadata.
+- Provide `BackgroundJobService` for updating task progress, storing execution logs, and broadcasting status updates.
+- Include optional SSE streaming view for real-time progress updates on long-running tasks.
+
+### 3.7 Optional Modules (CAPTCHA, Translation, Prometheus, Channels, S3)
+- **CAPTCHA**: PIL-based generator with fallback font selection, base64 data URL output, and cache key verification.
+- **Translation Management**: Complete `translation_management` module with dynamic translation registration, Google Translate API fallback, and serializer mixins.
+- **Prometheus**: Reusable `PrometheusMetricsMiddleware` normalizing `/api/v1/*` endpoints, along with standard metrics counters, gauges, and histograms.
+- **Channels**: Standardized ASGI `ProtocolTypeRouter` for WebSocket upgrades.
+
+### 3.8 Dependencies & Practice Directory (`requirements/` and `foundation/practice/`)
+- Split dependencies into core `base.txt` and optional feature requirements (`optional_celery.txt`, `optional_prometheus.txt`, etc.).
+- Create starter Jupyter notebooks in `foundation/practice/` with generic demonstration code for testing ORM queries, APIs, and background jobs.
+
+---
+
+## 4. Verification Plan
+
+### Automated Verification
+- Run syntax and import checks on all newly created and updated python files in `django/foundation/`:
+  ```bash
+  python3 -m py_compile django/foundation/core/views.py
+  python3 -m py_compile django/foundation/core/serializers.py
+  python3 -m py_compile django/foundation/core/exception_handler.py
+  python3 -m py_compile django/foundation/core/utils/common.py
+  python3 -m py_compile django/foundation/eg_user/models.py
+  python3 -m py_compile django/foundation/eg_user/authentication/jwt_auth.py
+  python3 -m py_compile django/foundation/background_jobs/models.py
+  python3 -m py_compile django/foundation/captcha/services.py
+  python3 -m py_compile django/foundation/settings/base.py
+  ```
+- Audit that no references or files in `/home/aneesh/Documents/python/docker/rawadhv2/rawadhai_backend/` were altered.
+
+### Manual Verification
+- Review file tree in `django/` to ensure clean separation of Core vs Optional packages.
+- Inspect settings architecture for clear feature flag toggles (`TRANSLATION_ENABLED`, `ENABLE_PROMETHEUS`, `ENABLE_LOGIN_CAPTCHA`, `USE_REDIS`, `USE_AWS`, `ENABLE_CHANNELS`).

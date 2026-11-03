@@ -1,0 +1,92 @@
+# Implementation Plan: Strict Self-Contained Business-Feature Module Architecture
+
+Restructure the codebase to strictly align with the exact architecture specified in `AGENTS.md`.
+
+---
+
+## Architectural Layout
+
+```text
+src/
+├── shared/
+│   ├── components/      # UI primitives & layout shells (Button, Card, Badge, SectionHeader, DynamicIcon, Header, Footer, MobileNav)
+│   ├── hooks/           # Shared generic hooks
+│   ├── services/        # Base API client & global interceptors
+│   ├── utils/           # Helper utilities
+│   └── types/           # Core global TS declarations (company.ts)
+│
+└── modules/
+    ├── home/
+    │   ├── pages/       # HomePage.tsx
+    │   ├── components/  # HeroSection.tsx, PlatformStorytelling.tsx, ProductEcosystem.tsx, WhyEntelgowSection.tsx, CinematicCTA.tsx
+    │   └── index.ts     # Public feature export
+    ├── services/
+    │   ├── pages/       # ServicesPage.tsx
+    │   ├── components/  # InteractiveServices.tsx
+    │   ├── services/    # servicesData.ts
+    │   ├── types/       # service.ts
+    │   └── index.ts     # Public feature export
+    ├── solutions/
+    │   ├── pages/       # SolutionsPage.tsx
+    │   ├── services/    # solutionsData.ts
+    │   ├── types/       # solution.ts
+    │   └── index.ts     # Public feature export
+    ├── ai-agent/
+    │   ├── components/  # AIAgentShowcase.tsx
+    │   └── index.ts     # Public feature export
+    ├── iot/
+    │   ├── components/  # IoTDataFlow.tsx
+    │   └── index.ts     # Public feature export
+    ├── process/
+    │   ├── pages/       # ProcessPage.tsx
+    │   ├── components/  # InteractiveProcess.tsx
+    │   ├── services/    # processData.ts
+    │   ├── types/       # process.ts
+    │   └── index.ts     # Public feature export
+    ├── technologies/
+    │   ├── pages/       # TechnologiesPage.tsx
+    │   ├── components/  # TechSpectrum.tsx
+    │   ├── services/    # technologiesData.ts
+    │   ├── types/       # technology.ts
+    │   └── index.ts     # Public feature export
+    ├── projects/
+    │   ├── pages/       # ProjectsPage.tsx, ProjectDetailPage.tsx
+    │   ├── components/  # CaseStudyShowcase.tsx
+    │   ├── services/    # projectsData.ts
+    │   ├── types/       # project.ts
+    │   └── index.ts     # Public feature export
+    ├── industries/
+    │   ├── pages/       # IndustriesPage.tsx
+    │   ├── components/  # IndustriesGrid.tsx
+    │   ├── services/    # industriesData.ts
+    │   ├── types/       # industry.ts
+    │   └── index.ts     # Public feature export
+    ├── about/
+    │   ├── pages/       # AboutPage.tsx
+    │   └── index.ts     # Public feature export
+    └── contact/
+        ├── pages/       # ContactPage.tsx
+        └── index.ts     # Public feature export
+```
+
+---
+
+## Next.js App Router Delegation (`src/app/`)
+Next.js App Router route handlers in `src/app/` act as thin route wrappers delegating directly to module page re-exports from `@/modules/<feature>`:
+- `src/app/page.tsx` -> renders `HomePage` from `@/modules/home`
+- `src/app/services/page.tsx` -> renders `ServicesPage` from `@/modules/services`
+- `src/app/solutions/page.tsx` -> renders `SolutionsPage` from `@/modules/solutions`
+- `src/app/technologies/page.tsx` -> renders `TechnologiesPage` from `@/modules/technologies`
+- `src/app/projects/page.tsx` -> renders `ProjectsPage` from `@/modules/projects`
+- `src/app/projects/[id]/page.tsx` -> renders `ProjectDetailPage` from `@/modules/projects`
+- `src/app/process/page.tsx` -> renders `ProcessPage` from `@/modules/process`
+- `src/app/industries/page.tsx` -> renders `IndustriesPage` from `@/modules/industries`
+- `src/app/about/page.tsx` -> renders `AboutPage` from `@/modules/about`
+- `src/app/contact/page.tsx` -> renders `ContactPage` from `@/modules/contact`
+
+---
+
+## Verification Plan
+
+1. `npx tsc --noEmit`: Ensure strict TypeScript compilation across all `@/shared` and `@/modules` imports.
+2. `npm run build`: Verify Next.js production build succeeds for all 20 SSG static routes.

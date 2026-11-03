@@ -1,0 +1,81 @@
+# Implementation Plan - 100% Framework-Isolated Template System
+
+Enforce total, 100% framework isolation across all supported packages (`django/`, `flutter/`, `react/`, `vuejs/`, `wordpress/`). Every framework directory will be completely self-contained and independently shippable with its own agents, skills, architecture plans, cross-platform automation (`linux/`, `windows/`, `macos/`, `git/`), Docker manifests (`docker/`), Graphify integration (`templates/graphify/`), and Git ignore rules (`git-ignore/`).
+
+---
+
+## Core Principles
+
+1. **Strict Framework Isolation**: Every framework directory (`django/`, `flutter/`, `react/`, `vuejs/`, `wordpress/`) contains EVERYTHING it needs inside its own folder. No framework depends on any files outside its directory.
+2. **Duplication is Acceptable**: Automation scripts, Docker configs, Graphify setup scripts, Git hooks, and skills are mirrored and customized per framework inside `<framework>/automation/`, `<framework>/docker/`, `<framework>/templates/`, and `<framework>/skills/`.
+3. **Strict Safety**: Read-only reference inspection of `weighingscale_app`, `rawadhai_backend`, and `rawadhai_frontend`. **NEVER** edit, rename, move, or modify any files in those three projects.
+
+---
+
+## Detailed Structure per Framework
+
+Each framework directory (`django/`, `flutter/`, `react/`, `vuejs/`, `wordpress/`) will contain:
+
+```text
+<framework>/
+├── AGENTS.md                                    # Framework multi-agent entry point
+├── AGENT_USAGE.md                               # Step-by-step developer usage guide
+├── agents/                                      # Framework agent roles (planner, implementer, tester, reviewer...)
+├── skills/                                      # Framework skills (standards, ORM/state, graphify, docker, hooks...)
+├── architecture_plans/                          # Framework architecture plans
+├── automation/                                  # Framework-specific cross-platform automation
+│   ├── README.md
+│   ├── setup-project.sh                         # Framework project setup script (Linux/macOS)
+│   ├── setup-project.ps1                        # Framework project setup script (Windows PowerShell)
+│   ├── linux/                                   # Linux Bash scripts (.sh)
+│   ├── macos/                                   # macOS Bash scripts (.sh)
+│   ├── windows/                                 # Windows PowerShell (.ps1) & CMD (.cmd)
+│   └── git/                                     # Cross-platform Git hooks (pre-commit, post-commit)
+├── docker/                                      # Framework Docker configurations
+│   ├── README.md
+│   ├── Dockerfile
+│   ├── Dockerfile.dev
+│   ├── Dockerfile.prod
+│   ├── docker-compose.yml
+│   ├── docker-compose.dev.yml
+│   └── env.docker.example
+├── templates/                                   # Framework templates & setup scripts
+│   └── graphify/
+│       ├── .graphifyignore
+│       ├── graphify-setup.sh
+│       ├── graphify-setup.ps1
+│       ├── clean-graphify.sh
+│       └── clean-graphify.ps1
+└── git-ignore/                                  # Framework Git ignore templates & guidance
+    ├── README.md
+    └── gitignore.template
+```
+
+---
+
+## Proposed Component Breakdown
+
+### 1. 🐍 Django (`django/`)
+- Fully self-contained: `django/agents/`, `django/skills/`, `django/architecture_plans/`, `django/automation/`, `django/docker/`, `django/templates/graphify/`, `django/git-ignore/`, `django/AGENTS.md`, `django/AGENT_USAGE.md`.
+
+### 2. 💙 Flutter (`flutter/`)
+- Fully self-contained: `flutter/agents/`, `flutter/skills/`, `flutter/architecture_plans/`, `flutter/automation/`, `flutter/docker/`, `flutter/templates/graphify/`, `flutter/git-ignore/`, `flutter/AGENTS.md`, `flutter/AGENT_USAGE.md`.
+
+### 3. ⚛️ React (`react/`)
+- Fully self-contained: `react/agents/`, `react/skills/`, `react/architecture_plans/`, `react/automation/`, `react/docker/`, `react/templates/graphify/`, `react/git-ignore/`, `react/AGENTS.md`, `react/AGENT_USAGE.md`.
+
+### 4. 💚 Vue.js (`vuejs/`)
+- Fully self-contained: `vuejs/agents/`, `vuejs/skills/`, `vuejs/architecture_plans/`, `vuejs/automation/`, `vuejs/docker/`, `vuejs/templates/graphify/`, `vuejs/git-ignore/`, `vuejs/AGENTS.md`, `vuejs/AGENT_USAGE.md`.
+
+### 5. 🌐 WordPress (`wordpress/`)
+- Fully self-contained: `wordpress/agents/`, `wordpress/skills/`, `wordpress/architecture_plans/`, `wordpress/automation/`, `wordpress/docker/`, `wordpress/templates/graphify/`, `wordpress/git-ignore/`, `wordpress/AGENTS.md`, `wordpress/AGENT_USAGE.md`.
+
+---
+
+## Verification Plan
+
+### Automated Verification
+- Verify that every framework directory (`django/`, `flutter/`, `react/`, `vuejs/`, `wordpress/`) contains all 8 required sub-components (`agents`, `skills`, `architecture_plans`, `automation`, `docker`, `templates`, `git-ignore`, `AGENTS.md`, `AGENT_USAGE.md`).
+- Validate shell scripts using `bash -n`.
+- Validate PowerShell scripts using static syntax check.
+- Verify zero external directory dependencies for each framework package.

@@ -1,0 +1,583 @@
+# Restructure Agent-Skill Template System — Full Isolation
+
+Every framework is **100% self-contained**. No shared `common/` directory. No cross-framework dependencies. Each framework ships independently.
+
+---
+
+## Directory Structure
+
+```text
+myproject_agent_skill_prompt_files/
+├── README.md                                    # Master index & getting started
+├── manifest.json                                # Machine-readable catalog
+│
+├── django/                                      # 🐍 100% SELF-CONTAINED
+│   ├── AGENTS.md                                # Entry point
+│   │
+│   ├── agents/
+│   │   ├── planner.agent.md
+│   │   ├── orchestrator.agent.md
+│   │   ├── implementer.agent.md
+│   │   ├── tester.agent.md
+│   │   ├── reviewer.agent.md
+│   │   ├── architecture-reviewer.agent.md
+│   │   ├── database-reviewer.agent.md
+│   │   ├── security-auditor.agent.md
+│   │   ├── performance-tuner.agent.md
+│   │   └── documentation-writer.agent.md
+│   │
+│   ├── skills/
+│   │   ├── django-models/
+│   │   │   └── SKILL.md
+│   │   ├── django-rest-api/
+│   │   │   └── SKILL.md
+│   │   ├── django-migrations/
+│   │   │   └── SKILL.md
+│   │   ├── django-celery-tasks/
+│   │   │   └── SKILL.md
+│   │   ├── django-testing/
+│   │   │   └── SKILL.md
+│   │   ├── django-implementation-planning/
+│   │   │   └── SKILL.md
+│   │   ├── django-cross-agent-coordination/
+│   │   │   └── SKILL.md
+│   │   ├── django-project-onboarding/
+│   │   │   └── SKILL.md
+│   │   └── django-code-standards/
+│   │       └── SKILL.md
+│   │
+│   └── architecture_plans/
+│       ├── django-query-optimization.md
+│       ├── django-api-architecture.md
+│       ├── django-celery-architecture.md
+│       ├── django-translation-architecture.md
+│       ├── django-pdf-generation.md
+│       └── django-performance-tuning.md
+│
+├── flutter/                                     # 💙 100% SELF-CONTAINED
+│   ├── AGENTS.md
+│   │
+│   ├── agents/
+│   │   ├── planner.agent.md
+│   │   ├── orchestrator.agent.md
+│   │   ├── implementer.agent.md
+│   │   ├── tester.agent.md
+│   │   └── reviewer.agent.md
+│   │
+│   ├── skills/
+│   │   ├── flutter-drift-database/
+│   │   │   └── SKILL.md
+│   │   ├── flutter-provider-state/
+│   │   │   └── SKILL.md
+│   │   ├── flutter-serial-hardware/
+│   │   │   └── SKILL.md
+│   │   ├── flutter-testing/
+│   │   │   └── SKILL.md
+│   │   ├── flutter-implementation-planning/
+│   │   │   └── SKILL.md
+│   │   ├── flutter-cross-agent-coordination/
+│   │   │   └── SKILL.md
+│   │   ├── flutter-project-onboarding/
+│   │   │   └── SKILL.md
+│   │   └── flutter-code-standards/
+│   │       └── SKILL.md
+│   │
+│   └── architecture_plans/
+│       ├── flutter-state-management.md
+│       ├── flutter-local-database.md
+│       └── flutter-hardware-integration.md
+│
+├── react/                                       # ⚛️ 100% SELF-CONTAINED
+│   ├── AGENTS.md
+│   │
+│   ├── agents/
+│   │   ├── planner.agent.md
+│   │   ├── orchestrator.agent.md
+│   │   ├── implementer.agent.md
+│   │   ├── tester.agent.md
+│   │   └── reviewer.agent.md
+│   │
+│   ├── skills/
+│   │   ├── react-server-components/
+│   │   │   └── SKILL.md
+│   │   ├── react-hooks-state/
+│   │   │   └── SKILL.md
+│   │   ├── react-form-security/
+│   │   │   └── SKILL.md
+│   │   ├── react-testing/
+│   │   │   └── SKILL.md
+│   │   ├── react-implementation-planning/
+│   │   │   └── SKILL.md
+│   │   ├── react-cross-agent-coordination/
+│   │   │   └── SKILL.md
+│   │   ├── react-project-onboarding/
+│   │   │   └── SKILL.md
+│   │   └── react-code-standards/
+│   │       └── SKILL.md
+│   │
+│   └── architecture_plans/
+│       ├── react-component-architecture.md
+│       ├── react-state-management.md
+│       └── react-api-integration.md
+│
+├── vuejs/                                       # 💚 100% SELF-CONTAINED
+│   ├── AGENTS.md
+│   │
+│   ├── agents/
+│   │   ├── planner.agent.md
+│   │   ├── orchestrator.agent.md
+│   │   ├── implementer.agent.md
+│   │   ├── tester.agent.md
+│   │   └── reviewer.agent.md
+│   │
+│   ├── skills/
+│   │   ├── vue-composition-api/
+│   │   │   └── SKILL.md
+│   │   ├── vue-vuetify-ui/
+│   │   │   └── SKILL.md
+│   │   ├── vue-api-client/
+│   │   │   └── SKILL.md
+│   │   ├── vue-testing/
+│   │   │   └── SKILL.md
+│   │   ├── vue-implementation-planning/
+│   │   │   └── SKILL.md
+│   │   ├── vue-cross-agent-coordination/
+│   │   │   └── SKILL.md
+│   │   ├── vue-project-onboarding/
+│   │   │   └── SKILL.md
+│   │   └── vue-code-standards/
+│   │       └── SKILL.md
+│   │
+│   └── architecture_plans/
+│       ├── vue-component-architecture.md
+│       ├── vue-state-management.md
+│       ├── vue-api-integration.md
+│       ├── vue-i18n-architecture.md
+│       └── vue-csv-export.md
+│
+├── wordpress/                                   # 🌐 100% SELF-CONTAINED
+│   ├── AGENTS.md
+│   │
+│   ├── agents/
+│   │   ├── planner.agent.md
+│   │   ├── orchestrator.agent.md
+│   │   ├── implementer.agent.md
+│   │   ├── tester.agent.md
+│   │   └── reviewer.agent.md
+│   │
+│   ├── skills/
+│   │   ├── wp-security/
+│   │   │   └── SKILL.md
+│   │   ├── wp-database/
+│   │   │   └── SKILL.md
+│   │   ├── wp-rest-api/
+│   │   │   └── SKILL.md
+│   │   ├── wp-testing/
+│   │   │   └── SKILL.md
+│   │   ├── wp-implementation-planning/
+│   │   │   └── SKILL.md
+│   │   ├── wp-cross-agent-coordination/
+│   │   │   └── SKILL.md
+│   │   ├── wp-project-onboarding/
+│   │   │   └── SKILL.md
+│   │   └── wp-code-standards/
+│   │       └── SKILL.md
+│   │
+│   └── architecture_plans/
+│       ├── wp-plugin-architecture.md
+│       ├── wp-custom-database.md
+│       └── wp-rest-api-architecture.md
+│
+└── templates/                                   # Blank templates for new items
+    ├── SKILL_TEMPLATE.md
+    ├── AGENT_TEMPLATE.md
+    └── AGENTS_ENTRY_POINT_TEMPLATE.md
+```
+
+---
+
+## Isolation Model
+
+```text
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐
+│  django/ │  │ flutter/ │  │  react/  │  │  vuejs/  │  │  wordpress/  │
+│ AGENTS   │  │ AGENTS   │  │ AGENTS   │  │ AGENTS   │  │   AGENTS     │
+│ agents/  │  │ agents/  │  │ agents/  │  │ agents/  │  │   agents/    │
+│ skills/  │  │ skills/  │  │ skills/  │  │ skills/  │  │   skills/    │
+│ arch_pl/ │  │ arch_pl/ │  │ arch_pl/ │  │ arch_pl/ │  │   arch_pl/   │
+└──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────────┘
+     ╳              ╳              ╳              ╳              ╳
+ZERO cross-links between any frameworks. Ship any single directory.
+```
+
+Universal rules (git safety, simplicity, planning workflow, etc.) are embedded **inside** each framework as framework-specific skills (`<fw>-code-standards/`, `<fw>-implementation-planning/`, etc.) — tailored to that framework's commands, tools, and conventions.
+
+---
+
+## SKILL.md Format
+
+```markdown
+---
+name: <kebab-case-skill-name>
+description: >
+  <1-3 sentences: WHAT this skill does and WHEN an agent should use it.>
+version: "1.0"
+framework: <django|flutter|react|vuejs|wordpress>
+---
+
+# <Skill Display Name>
+
+## Purpose
+
+<What problem does this skill solve?>
+
+## When to Use
+
+- <Condition 1>
+- <Condition 2>
+
+## When NOT to Use
+
+- <Condition 1>
+
+## Required Context
+
+- <What the agent needs before applying this skill>
+
+## Instructions
+
+<Detailed actionable content — the bulk of the skill>
+
+## Expected Output
+
+<What the agent produces>
+
+## Validation Checklist
+
+- [ ] <Check 1>
+- [ ] <Check 2>
+```
+
+---
+
+## Agent File Format (`.agent.md`)
+
+```markdown
+---
+name: <kebab-case-agent-name>
+description: >
+  <1-2 sentence role description.>
+role: <planner|orchestrator|implementer|tester|reviewer|specialist>
+framework: <django|flutter|react|vuejs|wordpress>
+---
+
+# <Agent Display Name>
+
+## Role & Responsibility
+
+<What this agent does.>
+
+## Scope
+
+### In Scope
+- <items>
+
+### Out of Scope
+- <items>
+
+## Applicable Skills
+
+| Skill | Purpose |
+|---|---|
+| `<skill-name>` | <Why this agent uses it> |
+
+## Workflow
+
+<Numbered steps>
+
+## Framework-Specific Rules
+
+<Framework-specific conventions, commands, tools, patterns>
+
+## Expected Output
+
+<What this agent produces>
+
+## Completion Criteria
+
+- [ ] <Done condition>
+```
+
+---
+
+## AGENTS.md Entry Point Format
+
+```markdown
+# <Framework> Multi-Agent Environment
+
+## Agent Team
+
+| Agent | Responsibility |
+|---|---|
+| [`agents/planner.agent.md`](agents/planner.agent.md) | ... |
+| ... | ... |
+
+## Skills Catalog
+
+| Skill | Purpose |
+|---|---|
+| [`skills/<name>/SKILL.md`](skills/<name>/SKILL.md) | ... |
+| ... | ... |
+
+## Architecture Plans
+
+| Plan | Topic |
+|---|---|
+| [`architecture_plans/<name>.md`](architecture_plans/<name>.md) | ... |
+| ... | ... |
+
+## Tool Entry Points
+
+<How to create CLAUDE.md, GEMINI.md, .codex/instructions.md,
+.antigravity/README.md for projects adopting this template.>
+
+## Key Conventions
+
+<Framework-specific rules summary>
+```
+
+---
+
+## manifest.json
+
+```json
+{
+  "name": "multi-agent-skill-templates",
+  "version": "2.0.0",
+  "description": "Framework-isolated agent, skill, and architecture plan templates.",
+  "frameworks": {
+    "django": {
+      "entry_point": "django/AGENTS.md",
+      "agents": "django/agents/",
+      "skills": "django/skills/",
+      "architecture_plans": "django/architecture_plans/"
+    },
+    "flutter": {
+      "entry_point": "flutter/AGENTS.md",
+      "agents": "flutter/agents/",
+      "skills": "flutter/skills/",
+      "architecture_plans": "flutter/architecture_plans/"
+    },
+    "react": {
+      "entry_point": "react/AGENTS.md",
+      "agents": "react/agents/",
+      "skills": "react/skills/",
+      "architecture_plans": "react/architecture_plans/"
+    },
+    "vuejs": {
+      "entry_point": "vuejs/AGENTS.md",
+      "agents": "vuejs/agents/",
+      "skills": "vuejs/skills/",
+      "architecture_plans": "vuejs/architecture_plans/"
+    },
+    "wordpress": {
+      "entry_point": "wordpress/AGENTS.md",
+      "agents": "wordpress/agents/",
+      "skills": "wordpress/skills/",
+      "architecture_plans": "wordpress/architecture_plans/"
+    }
+  },
+  "templates": {
+    "skill": "templates/SKILL_TEMPLATE.md",
+    "agent": "templates/AGENT_TEMPLATE.md",
+    "entry_point": "templates/AGENTS_ENTRY_POINT_TEMPLATE.md"
+  }
+}
+```
+
+---
+
+## What Happens to Current `common/` Content
+
+The `common/` directory is **eliminated**. Its content is distributed into each framework:
+
+| Current `common/` File | Where It Goes |
+|---|---|
+| `common_agent_rules.md` | → `<fw>/skills/<fw>-code-standards/SKILL.md` (one per framework, tailored to that framework's tools/commands) |
+| `implementation_planning_workflow.md` | → `<fw>/skills/<fw>-implementation-planning/SKILL.md` (one per framework, with framework-specific validation commands) |
+| `cross_agent_communication.md` | → `<fw>/skills/<fw>-cross-agent-coordination/SKILL.md` (one per framework) |
+| `project_auto_detection_and_onboarding.md` | → `<fw>/skills/<fw>-project-onboarding/SKILL.md` (one per framework, with that framework's detection indicators) |
+| `walkthrough_translation_system_improvements.md` | → **deleted** (project-specific) |
+
+Each framework's copy is then **tailored** to that framework. For example:
+- Django's `django-implementation-planning/SKILL.md` includes `python manage.py test`, `docker compose exec`
+- Flutter's `flutter-implementation-planning/SKILL.md` includes `flutter analyze`, `flutter test`, `flutter pub run build_runner`
+- React's `react-implementation-planning/SKILL.md` includes `npm run test`, `npx tsc --noEmit`, `npm run build`
+
+---
+
+## What Happens to `architecture_plans/`
+
+The top-level `architecture_plans/` directory is **eliminated**. Content moves inside each framework:
+
+| Current File | New Location | Action |
+|---|---|---|
+| `architecture_plans/common/multilingual_support_master_plan.md` | `django/architecture_plans/django-translation-architecture.md` | Genericize, keep Django-relevant parts |
+| `architecture_plans/common/login_captcha_feature_flag.md` | Distribute relevant parts to framework arch plans that need it | Genericize |
+| `architecture_plans/common/sequential_i18n_code_instrumentation.md` | Merge into relevant framework translation arch plans | Genericize |
+| `architecture_plans/django/fix_n1_query_optimization_guide.md` | `django/architecture_plans/django-query-optimization.md` | Genericize |
+| `architecture_plans/django/backend_sync_translation_integration.md` | `django/architecture_plans/django-translation-architecture.md` | Merge & genericize |
+| `architecture_plans/django/dynamic_language_translation_nested_models.md` | `django/architecture_plans/django-translation-architecture.md` | Merge & genericize |
+| `architecture_plans/django/generic_translation_static_fields.md` | `django/architecture_plans/django-translation-architecture.md` | Merge & genericize |
+| `architecture_plans/django/translatable_backend_constants_migration.md` | `django/architecture_plans/django-translation-architecture.md` | Merge & genericize |
+| `architecture_plans/django/pdf_unicode_font_rtl_shaping.md` | `django/architecture_plans/django-pdf-generation.md` | Genericize |
+| `architecture_plans/django/fix_translate_validation_error_messages_drf.md` | `django/architecture_plans/django-translation-architecture.md` | Merge & genericize |
+| `architecture_plans/django/performance_investigation_translation_query_spike.md` | `django/architecture_plans/django-performance-tuning.md` | Genericize |
+| `architecture_plans/django/performance_optimization_subscriptions_api.md` | `django/architecture_plans/django-api-architecture.md` | Genericize |
+| `architecture_plans/vuejs/risk_management_csv_export_localization.md` | `vuejs/architecture_plans/vue-csv-export.md` | Genericize |
+| `architecture_plans/vuejs/risk_management_i18n_translation_refactor.md` | `vuejs/architecture_plans/vue-i18n-architecture.md` | Genericize |
+| `architecture_plans/react/README.md` | `react/architecture_plans/` (new plans created) | Replace placeholder |
+| `architecture_plans/flutter/README.md` | `flutter/architecture_plans/` (new plans created) | Replace placeholder |
+| `architecture_plans/wordpress/README.md` | `wordpress/architecture_plans/` (new plans created) | Replace placeholder |
+| `architecture_plans/README.md` | **deleted** — no longer needed | |
+
+---
+
+## Files to Remove
+
+### Duplicate Agent Files (within same framework)
+
+| File | Reason |
+|---|---|
+| `django/agents/orchestration_agent.md` | Duplicate of `orchestrator.agent.md` |
+| `django/agents/planning_agent.md` | Duplicate of `planner.agent.md` |
+| `django/agents/testing_agent.md` | Duplicate of `test-engineer.agent.md` |
+| `django/agents/code_review_agent.md` | Duplicate of `code-reviewer.agent.md` |
+| `django/agents/implementer.agent.md` | Duplicate of `django_agent.md` |
+| `django/agents/code-quality.agent.md` | Merged into `reviewer.agent.md` |
+| *(Same pattern for flutter, vuejs, react, wordpress)* | |
+
+### Guide Files Merged into AGENTS.md
+
+| File | Reason |
+|---|---|
+| `django/django_backend_agent_guide.md` | Merged into `django/AGENTS.md` |
+| `flutter/flutter_desktop_agent_guide.md` | Merged into `flutter/AGENTS.md` |
+| `react/react_frontend_agent_guide.md` | Merged into `react/AGENTS.md` |
+| `vuejs/vue_frontend_agent_guide.md` | Merged into `vuejs/AGENTS.md` |
+| `wordpress/wordpress_agent_guide.md` | Merged into `wordpress/AGENTS.md` |
+
+### Tool-Specific Shim Files (per framework)
+
+| Pattern | Reason |
+|---|---|
+| `<fw>/.agents/AGENTS.md` | Redirect noise — documented in AGENTS.md instead |
+| `<fw>/.antigravity/README.md` | Redirect noise |
+| `<fw>/.codex/instructions.md` | Redirect noise |
+| `<fw>/CLAUDE.md` | Redirect noise |
+| `<fw>/GEMINI.md` | Redirect noise |
+
+### Eliminated Directories
+
+| Directory | Reason |
+|---|---|
+| `common/` | Eliminated — content distributed into each framework |
+| `architecture_plans/` (top-level) | Eliminated — content moved into `<fw>/architecture_plans/` |
+
+---
+
+## Full Migration Map
+
+| Current | New | Action |
+|---|---|---|
+| **common/** | | |
+| `common/common_agent_rules.md` | `django/skills/django-code-standards/SKILL.md` (+ flutter, react, vuejs, wordpress copies) | Distribute & tailor per framework |
+| `common/implementation_planning_workflow.md` | `django/skills/django-implementation-planning/SKILL.md` (+ copies) | Distribute & tailor |
+| `common/cross_agent_communication.md` | `django/skills/django-cross-agent-coordination/SKILL.md` (+ copies) | Distribute & tailor |
+| `common/project_auto_detection_and_onboarding.md` | `django/skills/django-project-onboarding/SKILL.md` (+ copies) | Distribute & tailor |
+| `common/walkthrough_translation_system_improvements.md` | *(deleted)* | Project-specific |
+| **architecture_plans/** | | |
+| `architecture_plans/README.md` | *(deleted)* | Replaced by per-fw dirs |
+| `architecture_plans/common/*` | Distributed into relevant `<fw>/architecture_plans/` | Genericize |
+| `architecture_plans/django/*` | `django/architecture_plans/` | Genericize |
+| `architecture_plans/vuejs/*` | `vuejs/architecture_plans/` | Genericize |
+| `architecture_plans/react/README.md` | `react/architecture_plans/` (new plans) | Replace placeholder |
+| `architecture_plans/flutter/README.md` | `flutter/architecture_plans/` (new plans) | Replace placeholder |
+| `architecture_plans/wordpress/README.md` | `wordpress/architecture_plans/` (new plans) | Replace placeholder |
+| **django/** | | |
+| `django/AGENTS.md` | `django/AGENTS.md` | Restructure + merge guide |
+| `django/django_backend_agent_guide.md` | *(merged into AGENTS.md)* | Merge |
+| `django/agents/planner.agent.md` + `planning_agent.md` | `django/agents/planner.agent.md` | Consolidate + frontmatter |
+| `django/agents/orchestrator.agent.md` + `orchestration_agent.md` | `django/agents/orchestrator.agent.md` | Consolidate + frontmatter |
+| `django/agents/django_agent.md` + `implementer.agent.md` | `django/agents/implementer.agent.md` | Consolidate + frontmatter |
+| `django/agents/test-engineer.agent.md` + `testing_agent.md` | `django/agents/tester.agent.md` | Consolidate + frontmatter |
+| `django/agents/code-reviewer.agent.md` + `code_review_agent.md` + `code-quality.agent.md` | `django/agents/reviewer.agent.md` | Consolidate + frontmatter |
+| `django/agents/architecture-reviewer.agent.md` | `django/agents/architecture-reviewer.agent.md` | Add frontmatter |
+| `django/agents/database-reviewer.agent.md` | `django/agents/database-reviewer.agent.md` | Add frontmatter |
+| `django/agents/security-auditor.agent.md` | `django/agents/security-auditor.agent.md` | Add frontmatter |
+| `django/agents/performance-tuner.agent.md` | `django/agents/performance-tuner.agent.md` | Add frontmatter |
+| `django/agents/doc-writer.agent.md` | `django/agents/documentation-writer.agent.md` | Rename + frontmatter |
+| `django/skills/django-models.md` | `django/skills/django-models/SKILL.md` | Folder + frontmatter |
+| `django/skills/django-rest-api.md` | `django/skills/django-rest-api/SKILL.md` | Folder + frontmatter |
+| `django/skills/django-migrations.md` | `django/skills/django-migrations/SKILL.md` | Folder + frontmatter |
+| `django/skills/celery-tasks.md` | `django/skills/django-celery-tasks/SKILL.md` | Folder + rename + frontmatter |
+| `django/skills/django-testing.md` | `django/skills/django-testing/SKILL.md` | Folder + frontmatter |
+| `django/.agents/`, `.antigravity/`, `.codex/`, `CLAUDE.md`, `GEMINI.md` | *(deleted)* | Redirect noise |
+| **flutter/** | *(same pattern as django)* | |
+| **react/** | *(same pattern as django)* | |
+| **vuejs/** | *(same pattern as django)* | |
+| **wordpress/** | *(same pattern as django)* | |
+
+---
+
+## Verification Plan
+
+```bash
+# 1. No common/ directory exists
+test -d common && echo "FAIL: common/ still exists" || echo "PASS"
+
+# 2. No top-level architecture_plans/ exists
+test -d architecture_plans && echo "FAIL: architecture_plans/ still exists" || echo "PASS"
+
+# 3. Every SKILL.md has YAML frontmatter
+for f in $(find . -name "SKILL.md"); do
+  head -10 "$f" | grep -q "^name:" || echo "MISSING name: $f"
+  head -10 "$f" | grep -q "^description:" || echo "MISSING description: $f"
+done
+
+# 4. Every .agent.md has YAML frontmatter
+for f in $(find . -name "*.agent.md"); do
+  head -10 "$f" | grep -q "^name:" || echo "MISSING name: $f"
+done
+
+# 5. Valid manifest
+python3 -c "import json; json.load(open('manifest.json')); print('OK')"
+
+# 6. No project-specific names
+grep -ri "metroweight\|rawadhv2\|weighingscale" --include="*.md" --include="*.json" . \
+  && echo "FAIL" || echo "PASS: no project refs"
+
+# 7. ZERO cross-framework references
+grep -ri "flutter\|dart\|pubspec" django/ --include="*.md" && echo "FAIL" || echo "django: ISOLATED"
+grep -ri "django\|python\|manage.py" flutter/ --include="*.md" && echo "FAIL" || echo "flutter: ISOLATED"
+grep -ri "react\|next\.js\|tsx" django/ --include="*.md" && echo "FAIL" || echo "django↛react: ISOLATED"
+grep -ri "vue\|vuetify\|composition" django/ --include="*.md" && echo "FAIL" || echo "django↛vue: ISOLATED"
+
+# 8. Each framework is self-contained
+for fw in django flutter react vuejs wordpress; do
+  echo "=== $fw ==="
+  test -f "$fw/AGENTS.md" && echo "  AGENTS.md ✓" || echo "  AGENTS.md ✗"
+  test -d "$fw/agents" && echo "  agents/ ✓" || echo "  agents/ ✗"
+  test -d "$fw/skills" && echo "  skills/ ✓" || echo "  skills/ ✗"
+  test -d "$fw/architecture_plans" && echo "  architecture_plans/ ✓" || echo "  architecture_plans/ ✗"
+done
+
+# 9. No common/ references in any framework
+grep -ri "../common/" django/ flutter/ react/ vuejs/ wordpress/ --include="*.md" \
+  && echo "FAIL: common refs found" || echo "PASS: no common refs"
+
+# 10. Counts
+echo "Skills: $(find . -name 'SKILL.md' | wc -l)"
+echo "Agents: $(find . -name '*.agent.md' | wc -l)"
+echo "Arch Plans: $(find . -path '*/architecture_plans/*.md' | wc -l)"
+```

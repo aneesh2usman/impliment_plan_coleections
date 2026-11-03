@@ -1,0 +1,85 @@
+# Implementation Plan - Fix ISO Datetime Response Shift (03:00:00 -> 00:00:00)
+
+## 1. Problem Description & Root Cause Analysis
+
+### Problem
+When the frontend submits payload with ISO datetime strings containing `Z` suffix:
+```json
+{
+  "start_date": "2026-09-24T00:00:00.000Z",
+  "end_date": "25-Sep-2026 00:00:00.000Z"
+}
+```
+The API response returns:
+```json
+{
+  "start_date": "24-Sep-2026 03:00:00",
+  "end_date": "25-Sep-2026 03:00:00"
+}
+```
+
+### Root Cause Analysis
+1. Frontend JavaScript date pickers format user-selected wall-clock times (e.g. `2026-09-24 00:00:00`) as ISO strings with a `Z` suffix (`"2026-09-24T00:00:00.000Z"`).
+2. The current `normalize_input_datetime` function checked for the presence of `Z` or explicit offsets and treated `"2026-09-24T00:00:00.000Z"` as absolute `00:00:00 UTC`.
+3. In Saudi Arabia (`Asia/Riyadh`, UTC+3), `00:00:00 UTC` corresponds to `03:00:00 AM` local time.
+4. When `TimezoneSerializerMixin` formatted the response in the project site timezone (`Asia/Riyadh`), it converted `00:00:00 UTC` + 3 hours = `03:00:00 AM`, returning `"24-Sep-2026 03:00:00"`.
+
+---
+
+## 2. Technical Approach & Solution
+
+### Solution Strategy
+- Update `normalize_input_datetime` in `converter.py` to extract the wall-clock components `(year, month, day, hour, minute, second)` directly from the input datetime/string, regardless of whether the string ends with `Z` or offset suffixes.
+- Bind the extracted wall-clock components directly to the project/camera site timezone (`Asia/Riyadh`).
+- For user selection `2026-09-24T00:00:00.000Z`:
+  - Wall-clock selection: `2026-09-24 00:00:00`
+  - Site local time: `2026-09-24 00:00:00 Asia/Riyadh`
+  - UTC stored in DB: `2026-09-23 21:00:00 UTC`
+  - Response formatted in `Asia/Riyadh`: `"24-Sep-2026 00:00:00"`
+
+---
+
+## 3. Main Tasks & Subtasks
+
+### Task 1: Update Datetime Input Normalizer
+- **File**: `rawadhai_module/utils/timezone_utils/converter.py`
+- Update `normalize_input_datetime()` to always map wall-clock datetime components into the project site timezone (`site_tz`), stripping unintended UTC `Z` shifts from frontend payloads.
+
+### Task 2: Ensure Serializer Consistency
+- **File**: `rawadhai_module/api/serializer/TimelapseVideosSerializer.py`
+- Verify `TimelapseConfigSerializer.validate()` and `check_camera_image_exist()` pass `site_tz` into `normalize_input_datetime()`.
+
+### Task 3: Add Unit Test Scenarios
+- **File**: `rawadhai_module/tests/test_24h_timelapse_selection.py`
+- Add unit test `test_iso_z_string_payload_preserves_wall_clock_response()` testing `start_date: "2026-09-24T00:00:00.000Z"` for `Asia/Riyadh` and asserting response returns `"24-Sep-2026 00:00:00"`.
+
+### Task 4: Documentation & Practice Updates
+- **Files**:
+  - `rawadhai_module/docs/timelapse_time_range_and_speed_fix.md`
+  - `practice/rawadhai_module/test_timelapse_time_range_and_speed_fix.ipynb`
+- Document ISO `Z` string normalization in Markdown docs and Jupyter notebook test cases.
+
+---
+
+## 4. Dependencies & Impacts
+- **Dependencies**: None. Uses built-in `datetime` and Python `zoneinfo`.
+- **Impacts**:
+  - **Custom Timelapse API**: Fixing ISO string inputs directly resolves the +3 hour shift in API responses.
+  - **Default Timelapse**: Safe and unaffected (uses server/project date bounds).
+  - **Database Queries**: Filter ranges will accurately cover the local 00:00 to 00:00 24-hour day in Saudi Arabia.
+
+---
+
+## 5. Testing & Verification Steps
+
+1. **Run Backend Test Suite in Docker**:
+   ```bash
+   docker exec rawadh-backend python manage.py test rawadhai_module.tests.test_24h_timelapse_selection
+   ```
+2. **Run Django System Check**:
+   ```bash
+   docker exec rawadh-backend python manage.py check
+   ```
+3. **Verify API Response Format**:
+   - Payload: `start_date: "2026-09-24T00:00:00.000Z"`, `end_date: "2026-09-25T00:00:00.000Z"`
+   - Expected Response: `"start_date": "24-Sep-2026 00:00:00"`, `"end_date": "25-Sep-2026 00:00:00"`.

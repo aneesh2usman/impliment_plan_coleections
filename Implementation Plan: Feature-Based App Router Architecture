@@ -1,0 +1,130 @@
+# Implementation Plan: Feature-Based App Router Architecture
+
+Restructure the codebase to enforce a **Feature-Based App Router Architecture directly inside `src/app/`** as mandated by the updated `AGENTS.md`.
+
+---
+
+## Architectural Rules
+
+1. **Feature Code Directly Inside `src/app/<feature>/`**:
+   Each feature route directory under `src/app/<feature>/` houses its page implementation (`page.tsx`) along with feature-specific `components/`, `services/`, `types/`, and `index.ts` exports. No separate `src/modules/` directory will be created or maintained.
+
+2. **Global Shared UI & Infrastructure (`src/components/`, `src/data/`)**:
+   - `src/components/common/`: Application-wide UI primitives (`Button`, `Card`, `Badge`, `SectionHeader`, `DynamicIcon`).
+   - `src/components/layout/`: Global layout shells (`Header`, `Footer`, `MobileNav`).
+   - `src/components/sections/`: Multi-feature reusable page sections (`HeroSection`, `PlatformStorytelling`, `ProductEcosystem`, `AIAgentShowcase`, `IoTDataFlow`, `WhyEntelgowSection`, `CinematicCTA`).
+   - `src/data/`: Global company metadata (`company.ts`).
+
+3. **No `src/modules/` or `src/shared/`**:
+   Completely remove `src/modules/` and `src/shared/`.
+
+---
+
+## File & Directory Mapping
+
+```text
+src/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── globals.css
+│   ├── robots.ts
+│   ├── sitemap.ts
+│   │
+│   ├── services/
+│   │   ├── page.tsx                   # Services page implementation
+│   │   ├── components/
+│   │   │   └── InteractiveServices.tsx
+│   │   ├── services/
+│   │   │   └── servicesData.ts
+│   │   ├── types/
+│   │   │   └── service.ts
+│   │   └── index.ts
+│   │
+│   ├── solutions/
+│   │   ├── page.tsx                   # Solutions page implementation
+│   │   ├── services/
+│   │   │   └── solutionsData.ts
+│   │   ├── types/
+│   │   │   └── solution.ts
+│   │   └── index.ts
+│   │
+│   ├── technologies/
+│   │   ├── page.tsx                   # Technologies page implementation
+│   │   ├── components/
+│   │   │   └── TechSpectrum.tsx
+│   │   ├── services/
+│   │   │   └── technologiesData.ts
+│   │   ├── types/
+│   │   │   └── technology.ts
+│   │   └── index.ts
+│   │
+│   ├── projects/
+│   │   ├── page.tsx                   # Projects portfolio implementation
+│   │   ├── [id]/
+│   │   │   └── page.tsx               # Project detail page implementation
+│   │   ├── components/
+│   │   │   └── CaseStudyShowcase.tsx
+│   │   ├── services/
+│   │   │   └── projectsData.ts
+│   │   ├── types/
+│   │   │   └── project.ts
+│   │   └── index.ts
+│   │
+│   ├── process/
+│   │   ├── page.tsx                   # Process page implementation
+│   │   ├── components/
+│   │   │   └── InteractiveProcess.tsx
+│   │   ├── services/
+│   │   │   └── processData.ts
+│   │   ├── types/
+│   │   │   └── process.ts
+│   │   └── index.ts
+│   │
+│   ├── industries/
+│   │   ├── page.tsx                   # Industries page implementation
+│   │   ├── components/
+│   │   │   └── IndustriesGrid.tsx
+│   │   ├── services/
+│   │   │   └── industriesData.ts
+│   │   ├── types/
+│   │   │   └── industry.ts
+│   │   └── index.ts
+│   │
+│   ├── about/
+│   │   └── page.tsx                   # About page implementation
+│   │
+│   └── contact/
+│       └── page.tsx                   # Contact page implementation
+│
+├── components/
+│   ├── common/
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Badge.tsx
+│   │   ├── SectionHeader.tsx
+│   │   └── DynamicIcon.tsx
+│   ├── layout/
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   └── MobileNav.tsx
+│   └── sections/
+│       ├── HeroSection.tsx
+│       ├── PlatformStorytelling.tsx
+│       ├── ProductEcosystem.tsx
+│       ├── AIAgentShowcase.tsx
+│       ├── IoTDataFlow.tsx
+│       ├── WhyEntelgowSection.tsx
+│       └── CinematicCTA.tsx
+│
+└── data/
+    └── company.ts
+```
+
+---
+
+## Verification Plan
+
+### Automated Checks
+1. `npx tsc --noEmit`: Ensure strict TypeScript compilation across `@/components/common/*`, `@/components/layout/*`, `@/components/sections/*`, `@/app/<feature>/*` with 0 errors.
+2. `npm run build`: Verify Next.js production build succeeds for all 20 SSG static routes.

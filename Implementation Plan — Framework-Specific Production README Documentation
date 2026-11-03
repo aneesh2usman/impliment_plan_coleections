@@ -1,0 +1,43 @@
+# Implementation Plan — Framework-Specific Production README Documentation
+
+Create a comprehensive, production-oriented `README.md` file inside each framework directory in the repository. The `README.md` files focus on **how to create, configure, develop, test, build, and deploy a new production-ready project from start to finish using the template**, leaving agent-specific instructions to `AGENT_USAGE.md`.
+
+## Target Files
+
+1. `django/README.md` — Production setup, split settings, ORM, Celery, Redis, Docker, PostgreSQL, i18n, monitoring.
+2. `flutter/mobile/README.md` — Provider state management, mobile DAOs, offline sync, Android/iOS build artifacts.
+3. `flutter/desktop/README.md` — Drift SQLite, WAL mode PRAGMA tuning, dynamic SQLCipher, serial hardware, Windows NSIS packaging.
+4. `vuejs/README.md` — Vue 3 Composition API, Vite, Pinia, Vuetify, Nginx containerization, Vitest.
+5. `react/README.md` — Next.js RSC, custom hooks, Server Actions, Vitest, Docker SSR/static deployment.
+6. `wordpress/README.md` — Custom plugin architecture, WP REST API, `$wpdb`, nonce security, PHP-FPM, MySQL, PHPUnit.
+
+---
+
+## Standardized README Section Architecture
+
+Each `README.md` file will strictly implement the following 13 core sections:
+
+1. **Overview & Purpose** — Concise statement answering *"How do I create and run a production-ready project from this template?"* and clear cross-links to `AGENT_USAGE.md`.
+2. **Step-by-Step Project Setup** — Steps 1 to 16 detailing template copying/setup script usage, framework selection, project renaming, env config, dependency installation, DB setup, auth, Docker, Git, Graphify, checks, testing, dev server, and prod build.
+3. **Core vs. Optional Components** — Visual tree / table of core foundation modules vs. toggleable optional features available in the template.
+4. **Production-Grade Architecture Flow** — Detailed ASCII text flow for runtime client-to-backend-to-DB data flow, background queue processing, and CI/CD deployment pipelines.
+5. **Environment Configuration** — Safe `.env` variable templates for development, testing, and production environments without real secrets.
+6. **Local Development Workflow** — Step-by-step commands for setting up, running migrations/compiling, starting dev server, and running tests.
+7. **Docker Containerization** — Setup, commands (`docker compose up`, logs, rebuilds, tests), and production container image creation (where applicable).
+8. **Git Workflow & Automation** — Step-by-step Git initialization, hook installation, pre-commit validation, and links to repo automation scripts.
+9. **Graphify Structural Analysis** — Activation, initialization, updating graph index, and agent graph usage summary.
+10. **Testing & Quality Assurance** — Exact commands to execute test suites, linters, static analysis, and health checks.
+11. **Production Deployment Pipeline** — Step-by-step pipeline from dev to production release artifacts (e.g., WSGI/ASGI + Gunicorn + Nginx + PostgreSQL for Django; NSIS installer for Flutter Desktop; APK/AAB for Flutter Mobile; Nginx for Vue; Docker/Vercel for React; Nginx/PHP-FPM/MySQL for WordPress).
+12. **Project Setup Checklist** — Comprehensive checklist covering initialization to production verification.
+13. **Documentation Cross-References** — Links between `README.md`, `AGENT_USAGE.md`, `AGENTS.md`, and skills/automation scripts.
+
+---
+
+## Verification Plan
+
+### Automated Verification
+- Verify all 6 `README.md` files exist in their specified paths.
+- Check markdown syntax formatting and link references using file check / inspection tools.
+
+### Manual Verification
+- Review each `README.md` against the 14 requirements in the prompt to ensure complete coverage, framework accuracy, clear step-by-step commands, production architecture diagrams, and complete separation between `README.md` and `AGENT_USAGE.md`.

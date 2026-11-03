@@ -1,0 +1,184 @@
+# Implementation Plan - Project-Ready Template System with Ready-to-Use Graphify Integration
+
+Transform the repository into a **project-ready template system**. When a developer creates a new project from this template, all required agents, skills, architecture plans, cross-platform automation, Git ignore rules, Docker configurations, and **Graphify integrations** (configuration, skills, tool entry points, post-commit hooks, ignore rules) are automatically configured and ready to use without manual boilerplate.
+
+---
+
+## Key Architecture Principles & Requirements
+
+1. **Strict Safety**: Read-only reference inspection of `weighingscale_app`, `rawadhai_backend`, and `rawadhai_frontend`. **NEVER** edit, rename, move, or modify any files in those three projects. All modifications take place exclusively within this template repository (`myproject_agent_skill_prompt_files`).
+2. **Framework Isolation**: Maintain 100% self-contained framework directories (`django/`, `flutter/`, `react/`, `vuejs/`, `wordpress/`). No cross-framework file dependencies.
+3. **Project Instantiation & Bootstrapping**: Provide automated cross-platform setup scripts (`automation/linux/setup-project.sh`, `automation/windows/setup-project.ps1`, `automation/macos/setup-project.sh`) to initialize a new project from this template, selecting the target framework and setting up Graphify, Git hooks, Docker, and AI tool configurations.
+4. **Ready-to-Use Graphify Integration**:
+   - Generated projects receive complete Graphify files: `.graphifyignore`, framework-specific Graphify skill, tool entry points (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.codex/instructions.md`, `.antigravity/README.md`), installation scripts, and post-commit hook integration (`post-commit.sh`, `post-commit.ps1`).
+   - Ignores local build/cache data (`graphify-out/cache/`) while tracking project graph metadata (`graphify-out/graph.json`).
+   - Compatible with Antigravity, Claude Code, Cursor, Codex, and VS Code.
+5. **Modular Graphify Disabling**: Graphify can be enabled or cleanly disabled/removed (`--no-graphify` flag or `clean-graphify.sh` / `clean-graphify.ps1`) without breaking the rest of the agent/skill system.
+6. **No Hardcoded Values**: All scripts, configurations, and skills dynamically use the target project's path and framework. Zero hardcoded project names.
+7. **10-Step Generic Agent Workflow**: Add generic agent entry points and workflows that automatically evaluate codebase size/unfamiliarity, run Graphify if useful, select framework agent + skills + architecture plans, implement, test, and review.
+8. **Cross-Platform First-Class Automation**: Separate Linux (`.sh`), macOS (`.sh`), and Windows (`.ps1`, `.cmd`) cleanly. PowerShell scripts do not depend on Bash; Bash scripts do not depend on Windows commands.
+9. **Optional Git Hooks**: Developers can select Git hooks mode (`OFF`, `basic`, `full`). Never silently auto-install hooks.
+10. **Actionable Development Coverage (>= 30%)**: All skills provide concrete rules (`What to inspect`, `What to do`, `What not to do`, `What tools/commands to use`, `What files to modify`, `How to validate the result`).
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> - **Project Instantiation**: Running `setup-project.sh` or `setup-project.ps1` provisions a new project with the chosen framework (Django, Flutter, React, Vue, WordPress) and configures Graphify, Git hooks, Docker, and AI tool configs automatically.
+> - **Graphify Ready-to-Use**: When setup completes, Graphify is fully configured (`.graphifyignore`, skill, tool instructions, post-commit hook) for the generated project.
+> - **Modular & Removable**: Graphify can be skipped during setup (`--no-graphify` / `-NoGraphify`) or stripped using `clean-graphify` without impacting any agent or skill features.
+> - **Framework Isolation Preserved**: Every framework package (`django/`, `flutter/`, `react/`, `vuejs/`, `wordpress/`) contains its own Graphify skill and configuration templates to remain independently shippable.
+
+---
+
+## Proposed Changes
+
+### 1. Root & Template Instantiation System
+
+#### [NEW] [AGENTS.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/AGENTS.md)
+- Root-level Generic Agent entry point.
+- Establishes the 10-step generic agent workflow (Understand Task -> Inspect Structure -> Evaluate Graphify -> Execute Graphify if large/unfamiliar -> Select Framework Agent -> Select Skills -> Check Architecture Plans -> Implement -> Test -> Review).
+- Provides concrete prompt examples (e.g. Django payment reporting).
+
+#### [NEW] [PROJECT_SETUP.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/PROJECT_SETUP.md)
+- Guide for instantiating new projects from this template.
+- Explains how `setup-project.sh` and `setup-project.ps1` copy/link framework files, configure Graphify, set up AI tool entry points, and install Git hooks.
+
+#### [MODIFY] [README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/README.md)
+- Update master README to explain:
+  1. Template System vs Generated Project relationship.
+  2. How to create a new project with ready-to-use Graphify and AI tool configs.
+  3. Graphify integration, Git ignore templates, Docker options, cross-platform automation, and Git hooks.
+
+#### [MODIFY] [manifest.json](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/manifest.json)
+- Update JSON manifest to include `setup_project`, `graphify`, `docker`, `git_ignore`, `automation`, and framework graphify skills.
+
+---
+
+### 2. Graphify Ready-to-Use Integration & Templates
+
+#### [NEW] [templates/graphify/.graphifyignore](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/templates/graphify/.graphifyignore)
+- Default `.graphifyignore` template for generated projects (ignoring `.git`, `node_modules`, `__pycache__`, `.venv`, `build`, `dist`, `.dart_tool`, `coverage`).
+
+#### [NEW] [templates/graphify/graphify-setup.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/templates/graphify/graphify-setup.sh)
+#### [NEW] [templates/graphify/graphify-setup.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/templates/graphify/graphify-setup.ps1)
+- Automated installer/verifier for Graphify CLI (`pip install graphify-code`) and initial graph generation (`graphify .`).
+
+#### [NEW] [templates/graphify/clean-graphify.sh](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/templates/graphify/clean-graphify.sh)
+#### [NEW] [templates/graphify/clean-graphify.ps1](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/templates/graphify/clean-graphify.ps1)
+- Modular script to cleanly remove Graphify configuration and cache files from a project without breaking agents/skills.
+
+#### [NEW] [skills/graphify/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/skills/graphify/SKILL.md)
+- Complete, actionable Graphify skill specification.
+- Details: When to use, When NOT to use, How to install (`pip install graphify-code`), How to build/update graph (`graphify .` or Python API `_rebuild_code`), How agents query `graphify-out/graph.json`, compatibility with Antigravity, Claude Code, Cursor, Codex, VS Code.
+
+#### [NEW] Framework-Specific Graphify Skills
+- [django/skills/django-graphify/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/django/skills/django-graphify/SKILL.md)
+- [flutter/skills/flutter-graphify/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/flutter/skills/flutter-graphify/SKILL.md)
+- [react/skills/react-graphify/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/react/skills/react-graphify/SKILL.md)
+- [vuejs/skills/vue-graphify/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/vuejs/skills/vue-graphify/SKILL.md)
+- [wordpress/skills/wp-graphify/SKILL.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/wordpress/skills/wp-graphify/SKILL.md)
+- Framework-isolated Graphify skills preserving zero-dependency package shipping.
+
+---
+
+### 3. Git Ignore Templates & Guidance
+
+#### [NEW] [git-ignore/README.md](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/git-ignore/README.md)
+- Clear guidance on Git ignore categories:
+  - **Must Ignore**: `.env`, `.env.*`, `__pycache__/`, `*.pyc`, `node_modules/`, `build/`, `dist/`, `.venv/`
+  - **Optional Ignore**: `graphify-out/cache/`, local agent caches, temporary files.
+  - **Should Usually Commit**: `AGENTS.md`, `SKILL.md`, `AGENT.md`, `architecture_plans/`, project config, required Graphify metadata (`graphify-out/graph.json`).
+
+#### [NEW] Modular Git Ignore Files
+- `git-ignore/gitignore-python`
+- `git-ignore/gitignore-django`
+- `git-ignore/gitignore-flutter`
+- `git-ignore/gitignore-vue`
+- `git-ignore/gitignore-react`
+- `git-ignore/gitignore-node`
+- `git-ignore/gitignore-docker`
+- `git-ignore/gitignore-ai-agent`
+- `git-ignore/gitignore-graphify`
+- `git-ignore/gitignore-ide`
+- `git-ignore/gitignore-os`
+- `git-ignore/gitignore.template` (consolidated full-stack template)
+
+---
+
+### 4. Optional Docker Options & Skill
+
+#### [NEW] Reusable Docker Templates under [docker/](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/docker)
+- `docker/Dockerfile`: Generic base production container template.
+- `docker/Dockerfile.dev`: Development container template with volume mounts and live reload.
+- `docker/Dockerfile.prod`: Multi-stage optimized production container template.
+- `docker/docker-compose.yml`: Production compose configuration template.
+- `docker/docker-compose.dev.yml`: Development compose configuration template.
+- `docker/env.docker.example`: Container environment variable template.
+- `docker/README.md`: Docker setup guide, health checks, and common commands.
+
+#### [NEW] Actionable Docker Skill
+- `skills/docker/SKILL.md` (and framework copies `django/skills/django-docker/SKILL.md`, `flutter/skills/flutter-docker/SKILL.md`, `react/skills/react-docker/SKILL.md`, `vuejs/skills/vue-docker/SKILL.md`, `wordpress/skills/wp-docker/SKILL.md`).
+- Guides agents to detect Docker projects and inspect, run, debug, and manage containers.
+
+---
+
+### 5. Cross-Platform Automation & Project Instantiation Scripts
+
+#### [NEW] Clean Automation Layout under [automation/](file:///home/aneesh/Documents/python/docker/rawadhv2/myproject_agent_skill_prompt_files/automation)
+- `automation/README.md`: Overview of cross-platform automation rules and structure.
+- `automation/common/`: Common task definitions (`validate.json`, `build.json`, `test.json`).
+- `automation/linux/`:
+  - `setup-project.sh`: Automated project bootstrapper (copies framework agents/skills, provisions `.graphifyignore`, installs Graphify CLI, configures tool entry points: Antigravity, Claude, Cursor, Codex, VS Code).
+  - `setup.sh`: Linux project setup script.
+  - `build.sh`: Linux build script.
+  - `test.sh`: Linux test runner script.
+  - `validate.sh`: Code validation and check script.
+  - `docker-dev.sh`: Docker dev environment launcher.
+  - `install-hooks.sh`: Git hooks installer with mode flag (`--mode off|basic|full`).
+- `automation/macos/`:
+  - `setup-project.sh`, `setup.sh`, `build.sh`, `test.sh`, `validate.sh`, `docker-dev.sh`, `install-hooks.sh`
+- `automation/windows/`:
+  - `setup-project.ps1`: Pure PowerShell project bootstrapper.
+  - `setup.ps1`: Pure PowerShell setup script.
+  - `build.ps1`: Pure PowerShell build script.
+  - `test.ps1`: Pure PowerShell test runner script.
+  - `validate.ps1`: Pure PowerShell code validation script.
+  - `docker-dev.ps1`: Pure PowerShell Docker launcher.
+  - `install-hooks.ps1`: Pure PowerShell Git hooks installer with `-Mode` parameter.
+  - `setup.cmd`, `build.cmd`: CMD wrappers for Windows.
+- `automation/git/`:
+  - `post-commit.sh`: Linux/macOS post-commit hook (fast metadata check + optional Graphify update + optional tests).
+  - `post-commit.ps1`: Pure PowerShell post-commit hook script.
+  - `pre-commit.sh`: Linux/macOS pre-commit hook script.
+  - `pre-commit.ps1`: Pure PowerShell pre-commit hook script.
+
+---
+
+### 6. Framework Package Updates & Tool Entry Points
+
+#### [MODIFY] Framework Entry Points & Usage Guides
+- Update `django/AGENTS.md`, `django/AGENT_USAGE.md`
+- Update `flutter/AGENTS.md`, `flutter/AGENT_USAGE.md`
+- Update `react/AGENTS.md`, `react/AGENT_USAGE.md`
+- Update `vuejs/AGENTS.md`, `vuejs/AGENT_USAGE.md`
+- Update `wordpress/AGENTS.md`, `wordpress/AGENT_USAGE.md`
+- Include Graphify, Docker, Git Hooks, and Cross-Platform Automation guidance in every framework's `AGENTS.md` and `AGENT_USAGE.md`.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Validate JSON files: `manifest.json`, `automation/common/*.json` using `python3 -m json.tool`.
+- Validate syntax of all Shell scripts using `bash -n`.
+- Validate PowerShell scripts for syntax errors using static syntax checks.
+- Run ripgrep checks to ensure zero hardcoded reference project names (`weighingscale_app`, `rawadhai_backend`, `rawadhai_frontend`) exist in generated files or scripts.
+- Test `setup-project.sh` dry-run in a temporary directory to verify generated project structure contains all agents, skills, architecture plans, `.graphifyignore`, tool configs, and git hooks.
+
+### Manual Verification
+- Verify that reference projects were NOT modified in any way.
+- Verify directory layout matches required structure.
+- Verify Graphify is ready to use in generated projects without manual boilerplate.
+- Verify Graphify can be cleanly disabled using `--no-graphify` or `clean-graphify.sh` / `clean-graphify.ps1`.
